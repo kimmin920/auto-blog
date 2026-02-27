@@ -1,0 +1,162 @@
+<script>
+    // --- UI Navigation ---
+    let currentStep = 1;
+
+    function goToStep(step) {
+      document.querySelectorAll('.step-item').forEach((el, index) => {
+        if(index + 1 === step) el.classList.add('active');
+        else el.classList.remove('active');
+        
+        if(index + 1 < step) el.classList.add('completed');
+        else el.classList.remove('completed');
+      });
+
+      document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+      document.getElementById('step' + step).classList.add('active');
+      currentStep = step;
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    // --- Media Upload (EXIF simulation via Date lastModified) ---
+    let mediaFiles = [];
+    
+    function handleImageUpload(e) {
+      const files = Array.from(e.target.files);
+      if(!files.length) return;
+      
+      files.forEach(f => {
+        // file.lastModified gives the exact timestamp when photo was modified/taken locally.
+        mediaFiles.push({ file: f, time: f.lastModified });
+      });
+      
+      // Sort chronologically (Time-line)
+      mediaFiles.sort((a,b) => a.time - b.time);
+      
+      const listEl = document.getElementById('mediaPreviewList');
+      listEl.innerHTML = '';
+      
+      mediaFiles.forEach((m, idx) => {
+        const url = URL.createObjectURL(m.file);
+        const dateObj = new Date(m.time);
+        const timeStr = \`\${dateObj.getHours()}:\${String(dateObj.getMinutes()).padStart(2,'0')}\`;
+
+        listEl.innerHTML += \`
+          <div class="media-item">
+            <span style="position:absolute; top:4px; left:4px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 6px; border-radius:4px; z-index:10;">순서 \${idx+1}</span>
+            <img src="\${url}" />
+            <div class="media-meta">⏱️ \${dateObj.getMonth()+1}/\${dateObj.getDate()} \${timeStr}</div>
+          </div>
+        \`;
+      });
+    }
+
+    // --- Search Golden Keywords Embedded ---
+    async function fetchGolden() {
+      const kw = document.getElementById('kwSearch').value.trim();
+      if(!kw) return;
+      
+      const resultEl = document.getElementById('kwResult');
+      resultEl.innerHTML = '분석중... ⏳';
+      try {
+        const res = await fetch('/api/naver-golden-keyword?keyword=' + encodeURIComponent(kw));
+        const json = await res.json();
+        if(!json.ok) { resultEl.innerHTML = '에러: ' + json.message; return; }
+        
+        let html = '<table style="width:100%; border-collapse:collapse; margin-top:10px;"><tr style="border-bottom:1px solid #ccc; font-weight:bold;"><td>연관키워드</td><td>포화도</td></tr>';
+        json.dataList.slice(0, 5).forEach(item => {
+          html += \`<tr style="border-bottom:1px solid #eee;"><td>\${item.keyword}</td><td>\${item.ratio.toFixed(2)}배</td></tr>\`;
+        });
+        html += '</table>';
+        resultEl.innerHTML = html;
+      } catch (err) {
+        resultEl.innerHTML = '통신 실패';
+      }
+    }
+
+    // --- Generation APIs ---
+    let appState = { outline: "", titles: [] };
+
+    async function startOutlineGeneration() {
+      goToStep(3);
+      document.getElementById('step3Loader').style.display = 'block';
+      document.getElementById('step3Content').style.display = 'none';
+      
+      const blogType = document.querySelector('input[name="blogType"]:checked').value;
+      const keywords = document.getElementById('targetKeywords').value;
+      const memo = document.getElementById('briefMemo').value;
+      
+      const promptData = { blogType, keywords, memo, imageCount: mediaFiles.length };
+
+      try {
+        const res = await fetch('/api/generate-outline-mvp', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(promptData)
+        });
+        const json = await res.json();
+        
+        if(!json.ok) throw new Error(json.message);
+        
+        appState.titles = json.titles || ["기본 제목 1", "기본 제목 2"];
+        appState.outline = json.outline || "목차 파싱 에러";
+        
+        const optsHtml = appState.titles.map((t, idx) => \`
+          <label class="radio-card"><input type="radio" name="selectedTitle" value="\${idx}" \${idx===0?'checked':''}> \${t}</label>
+        \`).join('');
+        
+        document.getElementById('titleOptions').innerHTML = optsHtml;
+        document.getElementById('outlineText').value = appState.outline;
+        
+        document.getElementById('step3Loader').style.display = 'none';
+        document.getElementById('step3Content').style.display = 'block';
+      } catch (err) {
+        document.getElementById('step3Loader').innerHTML = '❌ 오류: ' + err.message;
+        document.getElementById('step3Loader').className = 'status-box error';
+      }
+    }
+
+    async function startFinalGeneration() {
+      goToStep(4);
+      document.getElementById('step4Loader').style.display = 'block';
+      document.getElementById('step4Result').style.display = 'none';
+      
+      const blogType = document.querySelector('input[name="blogType"]:checked').value;
+      const keywords = document.getElementById('targetKeywords').value;
+      const titleIdx = document.querySelector('input[name="selectedTitle"]:checked')?.value || 0;
+      const finalTitle = appState.titles[titleIdx];
+      const finalOutline = document.getElementById('outlineText').value;
+
+      const optNegative = document.getElementById('optNegative').checked;
+      const optHashtag = document.getElementById('optHashtag').checked;
+      const optStyle = document.getElementById('optStyle').checked;
+      
+      const payload = { 
+        blogType, keywords, title: finalTitle, outline: finalOutline,
+        options: { optNegative, optHashtag, optStyle }
+      };
+
+      try {
+        const res = await fetch('/api/generate-final-mvp', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if(!json.ok) throw new Error(json.message);
+        
+        document.getElementById('finalHtml').innerHTML = \`<h2>\${finalTitle}</h2><br/>\${json.html}\`;
+        document.getElementById('finalMarkdown').value = \`# \${finalTitle}\
+\
+\${json.markdown}\`;
+        document.getElementById('finalHashtags').innerText = json.hashtags.join(' ');
+
+        document.getElementById('step4Loader').style.display = 'none';
+        document.getElementById('step4Result').style.display = 'block';
+      } catch (err) {
+        document.getElementById('step4Loader').innerHTML = '❌ 오류: ' + err.message;
+        document.getElementById('step4Loader').className = 'status-box error';
+      }
+    }
+  </script>
+</body>
+</html>

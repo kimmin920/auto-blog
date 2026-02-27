@@ -1,0 +1,3577 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <title>Blog Auto MVP v1.0</title>
+  <style>
+    /* 
+  Apple HIG Designer - Native iOS Style
+  Inspired by iOS Human Interface Guidelines
+*/
+    :root {
+      --system-bg: #F2F2F7;
+      --secondary-bg: #FFFFFF;
+      --tertiary-bg: #E5E5EA;
+      --label: #000000;
+      --secondary-label: rgba(60, 60, 67, 0.6);
+      --tertiary-label: rgba(60, 60, 67, 0.3);
+      --blue: #007AFF;
+      --blue-hover: #0051CC;
+      --green: #34C759;
+      --red: #FF3B30;
+      --orange: #FF9500;
+      --separator: rgba(60, 60, 67, 0.29);
+      --input-bg: rgba(118, 118, 128, 0.12);
+      --radius-lg: 20px;
+      --radius-md: 10px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--system-bg);
+      color: var(--label);
+      min-height: 100vh;
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 32px 16px;
+    }
+
+    @media (max-width: 600px) {
+      main {
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+    }
+
+    .header {
+      margin-bottom: 32px;
+      position: relative;
+      text-align: left;
+    }
+
+    .header h1 {
+      margin: 0 0 4px;
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 0.37px;
+      color: var(--label);
+    }
+
+    @media (max-width: 600px) {
+      .header h1 {
+        font-size: 28px;
+      }
+    }
+
+    .header p {
+      margin: 0;
+      color: var(--secondary-label);
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .auth-bar {
+      margin-top: 24px;
+      display: flex;
+      justify-content: flex-start;
+      z-index: 10;
+      padding-bottom: 8px;
+    }
+
+    .auth-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: var(--secondary-bg);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--secondary-label);
+      flex-wrap: wrap;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      border: 0.5px solid var(--separator);
+    }
+
+    .token-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-weight: 600;
+      background: rgba(52, 199, 89, 0.15);
+      color: #248A3D;
+    }
+
+    .setup-gate {
+      display: none;
+      margin: 0 0 24px 0;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: var(--secondary-bg);
+      color: var(--label);
+    }
+
+    .setup-gate h3 {
+      margin: 0 0 12px;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .setup-checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 12px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--secondary-bg);
+      border: 0.5px solid var(--separator);
+    }
+
+    .setup-item {
+      padding: 12px 16px;
+      font-size: 15px;
+      color: var(--label);
+      margin-bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 400;
+      border-bottom: 0.5px solid var(--separator);
+    }
+
+    .setup-item:last-child {
+      border-bottom: none;
+    }
+
+    .setup-item.ok {
+      color: var(--secondary-label);
+    }
+
+    .setup-item.current {
+      color: var(--blue);
+      font-weight: 500;
+    }
+
+    .setup-jump {
+      padding: 6px 12px;
+      font-size: 13px;
+      background: var(--tertiary-bg);
+      border-radius: 100px;
+      text-decoration: none;
+      border: none;
+      color: var(--blue);
+      font-weight: 600;
+    }
+
+    .wizard-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 0 8px;
+    }
+
+    .wizard-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+      color: var(--tertiary-label);
+      cursor: pointer;
+      transition: 0.2s;
+      min-width: 70px;
+    }
+
+    .step-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 55%;
+      width: 90%;
+      height: 2px;
+      background: var(--tertiary-bg);
+      z-index: 1;
+      transition: 0.3s;
+    }
+
+    .step-item.completed:not(:last-child)::after {
+      background: var(--blue);
+    }
+
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--system-bg);
+      color: var(--tertiary-label);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 6px;
+      z-index: 2;
+      position: relative;
+      border: 2px solid var(--tertiary-bg);
+      transition: 0.3s;
+    }
+
+    .step-item span {
+      font-size: 11px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .step-item.active .step-circle {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    .step-item.active {
+      color: var(--blue);
+    }
+
+    .step-item.completed .step-circle {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .step-item.completed {
+      color: var(--blue);
+    }
+
+    .step-content {
+      display: none;
+      background: transparent;
+      padding: 0;
+      animation: fadeIn 0.3s forwards;
+    }
+
+    .step-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .step-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--label);
+      margin: 0 0 16px 0;
+      padding-left: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    fieldset.form-group,
+    details.form-group {
+      background: var(--secondary-bg);
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    fieldset.form-group legend,
+    details.form-group summary {
+      font-weight: 600;
+      font-size: 15px;
+      padding: 0 8px;
+      margin-bottom: 12px;
+      color: var(--label);
+    }
+
+    details.form-group summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.form-group>div {
+      padding-top: 12px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--label);
+    }
+
+    .note {
+      font-size: 12px;
+      color: var(--secondary-label);
+      font-weight: 400;
+      text-transform: none;
+      margin-left: 0 !important;
+    }
+
+    input[type="text"],
+    input[type="file"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      background: var(--secondary-bg);
+      outline: none;
+      transition: all 0.2s;
+      font-family: inherit;
+      color: var(--label);
+    }
+
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      line-height: 1.4;
+    }
+
+    .btn {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+    }
+
+    .btn:active {
+      background: var(--blue-hover);
+    }
+
+    .btn-secondary {
+      background: var(--tertiary-bg);
+      color: var(--label);
+    }
+
+    .btn-secondary:hover {
+      opacity: 0.8;
+    }
+
+    .btn-outline {
+      background: var(--secondary-bg);
+      color: var(--blue);
+      border: 1.5px solid var(--blue);
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 600;
+      width: auto;
+      padding: 8px 16px;
+    }
+
+    .btn-outline:hover {
+      background: rgba(0, 122, 255, 0.05);
+    }
+
+    .nav-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    @media (max-width: 480px) {
+      .nav-actions {
+        flex-direction: column-reverse;
+      }
+
+      .nav-actions .btn {
+        width: 100%;
+      }
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .radio-card {
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: 0.2s;
+      background: var(--secondary-bg);
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--label);
+      word-break: keep-all;
+      line-height: 1.3;
+      height: 100%;
+    }
+
+    .radio-card:hover {
+      border-color: var(--blue);
+      background: #f8fafc;
+    }
+
+    .radio-card input {
+      margin: 0;
+      width: 16px;
+      height: 16px;
+      accent-color: var(--blue);
+      cursor: pointer;
+    }
+
+    .radio-card:has(input:checked) {
+      border-color: var(--blue);
+      background: rgba(0, 122, 255, 0.02);
+    }
+
+    .media-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .media-item {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      position: relative;
+      background: var(--secondary-bg);
+      border: 1px solid var(--separator);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .media-item img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 1px solid var(--separator);
+    }
+
+    .media-item video {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 1px solid var(--separator);
+      background: #000;
+    }
+
+    .media-item-content {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .media-meta {
+      font-size: 12px;
+      color: var(--secondary-label);
+      font-family: -apple-system, monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 8px;
+    }
+
+    .media-item .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--red);
+      backdrop-filter: blur(8px);
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+      z-index: 10;
+    }
+
+    .media-item .delete-btn:hover {
+      background: #fff;
+      transform: scale(1.05);
+    }
+
+    .status-box {
+      padding: 16px;
+      border-radius: var(--radius-md);
+      margin: 16px 0;
+      font-size: 15px;
+      font-weight: 400;
+      display: none;
+      animation: fadeIn 0.3s forwards;
+      line-height: 1.4;
+    }
+
+    .status-box.info {
+      background: var(--secondary-bg);
+      color: var(--label);
+      border-left: 4px solid var(--blue);
+      display: block;
+    }
+
+    .status-box.error {
+      background: var(--secondary-bg);
+      color: var(--red);
+      border-left: 4px solid var(--red);
+      display: block;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    @media (min-width: 601px) {
+      .modal-overlay {
+        align-items: center;
+      }
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeInModal 0.2s;
+    }
+
+    @keyframes fadeInModal {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .modal-content {
+      background: var(--system-bg);
+      width: 100%;
+      max-width: 700px;
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+      animation: slideUpModal 0.3s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+      overflow: hidden;
+    }
+
+    @media (min-width: 601px) {
+      .modal-content {
+        border-radius: var(--radius-lg);
+        width: 90%;
+        height: auto;
+        max-height: 85vh !important;
+        margin-top: 0;
+      }
+    }
+
+    @keyframes slideUpModal {
+      from {
+        transform: translateY(100%);
+      }
+
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      padding: 16px;
+      display: flex;
+      border-bottom: 0.5px solid var(--separator);
+      justify-content: space-between;
+      align-items: center;
+      background: var(--system-bg);
+      position: relative;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--label);
+      text-align: left;
+    }
+
+    .modal-close {
+      background: #E5E5EA;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--secondary-label);
+      transition: 0.2s;
+      padding: 0;
+    }
+
+    .modal-close:hover {
+      background: #D1D1D6;
+      color: var(--label);
+    }
+
+    .modal-body {
+      padding: 16px;
+      overflow-y: auto;
+      background: var(--system-bg);
+      font-size: 15px;
+    }
+
+    #promptModalBody {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      background: var(--secondary-bg);
+      color: var(--label);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: none;
+      line-height: 1.4;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+    }
+
+    .badge-honey {
+      background: #E4F8EA;
+      color: var(--green);
+    }
+
+    .badge-good {
+      background: #E5F0FF;
+      color: var(--blue);
+    }
+
+    .badge-saturated {
+      background: #FFEBEE;
+      color: var(--red);
+    }
+
+    .badge-exact {
+      background: #FFF4E5;
+      color: var(--orange);
+    }
+
+    .golden-item {
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px;
+      background: var(--secondary-bg);
+      border-bottom: 0.5px solid var(--separator);
+      gap: 4px;
+      cursor: pointer;
+      border-radius: 0;
+      margin-bottom: 0;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+    }
+
+    .golden-item:last-child {
+      border-bottom: none;
+    }
+
+    .golden-item:active {
+      background: var(--tertiary-bg);
+    }
+
+    .golden-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .golden-item-title {
+      font-weight: 500;
+      font-size: 17px;
+      color: var(--label);
+    }
+
+    .golden-item-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--secondary-label);
+    }
+
+    /* Settings Layout */
+    .settings-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      border-radius: 0;
+      min-height: 0;
+    }
+
+    @media (min-width: 601px) {
+      .settings-container {
+        flex-direction: row;
+        height: auto;
+        min-height: 400px;
+      }
+
+      .settings-sidebar {
+        width: 220px !important;
+        min-width: 220px !important;
+        border-right: 0.5px solid var(--separator) !important;
+        flex-direction: column !important;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .settings-tab {
+        border-bottom: 0.5px solid var(--separator) !important;
+        text-align: left !important;
+        flex: none !important;
+      }
+    }
+
+    .settings-sidebar {
+      background: var(--system-bg);
+      display: flex;
+      flex-direction: row;
+      overflow-x: auto;
+      border-bottom: 0.5px solid var(--separator);
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+
+    .settings-tab {
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 400;
+      font-size: 17px;
+      color: var(--label);
+      white-space: nowrap;
+      flex: 1;
+      text-align: center;
+      border-bottom: 0.5px solid var(--separator);
+    }
+
+    .settings-tab.active {
+      background: var(--secondary-bg);
+      font-weight: 600;
+      color: var(--blue);
+    }
+
+    .settings-content-area {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      background: var(--system-bg);
+    }
+
+    .settings-pane {
+      display: none;
+    }
+
+    .settings-pane.active {
+      display: block;
+      animation: fadeIn 0.2s;
+    }
+
+    .golden-pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 0;
+    }
+
+    .golden-page-btn {
+      padding: 8px 16px;
+      background: var(--tertiary-bg);
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--label);
+    }
+
+    .golden-page-btn.active {
+      background: var(--blue);
+      color: white;
+    }
+
+    .golden-page-btn:disabled {
+      opacity: 0.4;
+    }
+
+    .golden-exact-box {
+      background: var(--secondary-bg);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .golden-exact-box .golden-item-title {
+      font-size: 17px;
+      color: var(--blue);
+      font-weight: 500;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .chip-btn {
+      background: var(--tertiary-bg);
+      color: var(--label);
+      border: none;
+      border-radius: 10px;
+      padding: 6px 14px;
+      font-size: 15px;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    .chip-btn.active {
+      background: rgba(0, 122, 255, 0.15);
+      color: var(--blue);
+      font-weight: 500;
+    }
+
+    .step1-block-panel {
+      background: var(--secondary-bg);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .step1-block-panel.active {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+
+    .workflow-disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    *:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: -2px;
+    }
+
+    /* Wrapper to simulate grouped list for golden items */
+    #goldenResultList {
+      background: var(--secondary-bg);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    #goldenResultList>.golden-item {
+      border-bottom: 0.5px solid var(--separator);
+    }
+
+    #goldenResultList>.golden-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+
+<body>
+
+  <main>
+    <div class="header" style="position:relative;">
+      <h1>Blog Auto MVP v1.0</h1>
+      <p>AI를 활용하여 내 스타일과 검증된 SEO로 완벽한 포스트를 작성하세요.</p>
+      <button style="position:absolute; top:0; right:0; background:none; border:none; font-size:24px; cursor:pointer;"
+        onclick="document.getElementById('settingsModal').classList.add('active')" title="설정"><svg width="20"
+          height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+          </path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+          </path>
+        </svg></button>
+      <div class="auth-bar">
+        <div class="auth-card" id="authLoggedOut" style="display:none;">
+          <span>AI 기능은 로그인 후 사용할 수 있습니다.</span>
+          <a class="btn" id="googleLoginLink" style="padding:6px 12px; font-size:12px; text-decoration:none;"
+            href="/auth/google/login">Google로 로그인</a>
+        </div>
+        <div class="auth-card" id="authLoggedIn" style="display:none;">
+          <strong id="authEmailText">-</strong>
+          <span class="token-pill">토큰 <span id="authTokenBalance">0</span></span>
+          <a class="btn btn-outline" id="resultsLink" href="/results"
+            style="padding:6px 12px; font-size:12px; text-decoration:none;">결과물 이력</a>
+          <a class="btn btn-outline" href="/auth/logout"
+            style="padding:6px 12px; font-size:12px; text-decoration:none;">로그아웃</a>
+        </div>
+      </div>
+    </div>
+
+    <div id="setupGate" class="setup-gate">
+      <h3>시작 전 설정이 필요합니다</h3>
+      <div id="setupGateMsg">스타일 가이드와 페르소나를 먼저 설정하면 결과 품질이 안정적으로 올라갑니다.</div>
+      <div class="setup-checklist">
+        <div id="setupLoginItem" class="setup-item">
+          <span id="setupLoginLabel">1) Google 로그인</span>
+          <a id="setupLoginBtn" class="btn btn-outline setup-jump" href="/auth/google/login">바로가기</a>
+        </div>
+        <div id="setupStyleItem" class="setup-item">
+          <span id="setupStyleLabel">2) 스타일 추출 완료</span>
+          <button id="setupStyleBtn" type="button" class="btn btn-outline setup-jump"
+            onclick="openSettingsWithTab('tab-style')">바로가기</button>
+        </div>
+        <div id="setupPersonaItem" class="setup-item">
+          <span id="setupPersonaLabel">3) 페르소나 저장</span>
+          <button id="setupPersonaBtn" type="button" class="btn btn-outline setup-jump"
+            onclick="openSettingsWithTab('tab-persona')">바로가기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wizard Navigation -->
+    <div class="wizard-nav" id="wizardNav">
+      <div class="step-item active" id="nav-step1" onclick="goToStep(1)">
+        <div class="step-circle">1</div>
+        <span>기초 셋팅</span>
+      </div>
+      <div class="step-item" id="nav-step2" onclick="goToStep(2)">
+        <div class="step-circle">2</div>
+        <span>미디어 업로드</span>
+      </div>
+      <div class="step-item" id="nav-step3" onclick="goToStep(3)">
+        <div class="step-circle">3</div>
+        <span>Outline 비활성</span>
+      </div>
+      <div class="step-item" id="nav-step4" onclick="goToStep(4)">
+        <div class="step-circle">4</div>
+        <span>글 생성/퇴고</span>
+      </div>
+    </div>
+
+    <!-- Step 1: 기초 셋팅 -->
+    <div class="step-content active" id="step1">
+      <h2 class="step-title">1. 블로그 기초 방향 셋팅</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 12px 0;">
+        <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12px;"
+          onclick="saveStepDraft(true)">진행상황 보관</button>
+        <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12px;"
+          onclick="loadStepDraft(true)">임시저장 불러오기</button>
+        <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12px;"
+          onclick="clearSavedStepDraft()">초기화</button>
+      </div>
+      <div id="savedDraftHint" class="note" style="margin-left:0; margin-bottom:14px;"></div>
+
+      <fieldset class="form-group" style="border:1px solid var(--line); border-radius:8px; padding:12px;">
+        <legend style="padding:0 6px; font-weight:600;">블로그 성격 <small class="note">(결론부/표현에 반영됩니다)</small></legend>
+        <div class="options-grid">
+          <label class="radio-card"><input type="radio" name="post_type" value="info" checked> 정보성 (꿀팁, 지식 공유)</label>
+          <label class="radio-card"><input type="radio" name="post_type" value="review"> 내돈내산 후기 (솔직 리뷰)</label>
+          <label class="radio-card"><input type="radio" name="post_type" value="ad"> 협찬/광고 (가이드 반영)</label>
+          <label class="radio-card"><input type="radio" name="post_type" value="diary"> 일상 기록 (가벼운 에세이)</label>
+        </div>
+      </fieldset>
+
+      <div class="form-group">
+        <label>가장 중요한 키워드 <span class="note">(콤마로 구분, 최대 3개)</span></label>
+        <input type="text" id="targetKeywords" name="keywords" maxlength="60" placeholder="예: 안성맛집, 평택맛집, 곱창전골">
+        <button type="button" class="btn btn-outline" style="margin-top:8px; width:100%; font-size:13px;"
+          onclick="openGoldenModal()">추천 검색어 분석</button>
+      </div>
+
+      <div class="form-group">
+        <label>이번 글 한 줄 요약 <span style="color:#d00">(필수)</span></label>
+        <input type="text" id="oneLineSummary" name="structured.visit_context.one_line_summary"
+          placeholder="예: 주말에 친구랑 안성 ○○ 맛집 다녀옴! 주차 편하고 사장님 친절 " maxlength="120" required>
+      </div>
+
+      <details class="form-group" style="border:1px solid var(--line); border-radius:8px; padding:12px;">
+        <summary style="cursor:pointer; font-weight:600;">추가 정보(선택) — 입력할수록 글이 더 자연스러워져요 </summary>
+        <div style="margin-top:12px;">
+          <div class="form-group">
+            <label>콘텐츠 프리셋 <span class="note">(초기 블록 추천용, 언제든 변경 가능)</span></label>
+            <div class="options-grid">
+              <label class="radio-card"><input type="radio" name="content_preset" value="visit_review" checked
+                  onchange="applyStep1Preset()">방문/후기형</label>
+              <label class="radio-card"><input type="radio" name="content_preset" value="guide_info"
+                  onchange="applyStep1Preset()">정보/가이드형</label>
+              <label class="radio-card"><input type="radio" name="content_preset" value="experience_story"
+                  onchange="applyStep1Preset()">경험/일상형</label>
+              <label class="radio-card"><input type="radio" name="content_preset" value="recommendation_compare"
+                  onchange="applyStep1Preset()">추천/비교형</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>추가정보 블록 선택 <span class="note">(필요한 블록만 선택해서 입력)</span></label>
+            <div class="chip-row" id="step1BlockPicker">
+              <button type="button" class="chip-btn" data-block-id="summary_core"
+                onclick="toggleStep1Block('summary_core')">핵심 포인트</button>
+              <button type="button" class="chip-btn" data-block-id="audience_goal"
+                onclick="toggleStep1Block('audience_goal')">대상/목표</button>
+              <button type="button" class="chip-btn" data-block-id="cost_time"
+                onclick="toggleStep1Block('cost_time')">비용/시간</button>
+              <button type="button" class="chip-btn" data-block-id="pros_cons"
+                onclick="toggleStep1Block('pros_cons')">장점/아쉬움</button>
+              <button type="button" class="chip-btn" data-block-id="tips_caution"
+                onclick="toggleStep1Block('tips_caution')">팁/주의사항</button>
+              <button type="button" class="chip-btn" data-block-id="visit_context"
+                onclick="toggleStep1Block('visit_context')">방문 상황</button>
+              <button type="button" class="chip-btn" data-block-id="location"
+                onclick="toggleStep1Block('location')">위치/주차/웨이팅</button>
+              <button type="button" class="chip-btn" data-block-id="food"
+                onclick="toggleStep1Block('food')">메뉴/맛</button>
+              <button type="button" class="chip-btn" data-block-id="service"
+                onclick="toggleStep1Block('service')">서비스/분위기</button>
+              <button type="button" class="chip-btn" data-block-id="hospital" onclick="toggleStep1Block('hospital')">병원
+                상세</button>
+              <button type="button" class="chip-btn" data-block-id="parenting"
+                onclick="toggleStep1Block('parenting')">육아 포인트</button>
+              <button type="button" class="chip-btn" data-block-id="notes" onclick="toggleStep1Block('notes')">추가
+                메모</button>
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="summary_core">
+            <h3 style="margin:0 0 8px 0;">핵심 포인트</h3>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>핵심 요약 키워드(콤마)</label>
+              <input type="text" name="structured.general_info.key_points" placeholder="예: 재방문의사, 접근성, 만족도 높음"
+                maxlength="120">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="audience_goal">
+            <h3 style="margin:0 0 8px 0;">대상/목표</h3>
+            <div class="form-group">
+              <label>어떤 사람에게 도움되는 글인가요?</label>
+              <input type="text" name="structured.general_info.target_reader" placeholder="예: 주말 데이트 코스 찾는 분"
+                maxlength="100">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>이 글에서 얻어갈 핵심</label>
+              <input type="text" name="structured.general_info.expected_outcome" placeholder="예: 대기/주차/메뉴 선택 실전 팁"
+                maxlength="120">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="cost_time">
+            <h3 style="margin:0 0 8px 0;">비용/시간</h3>
+            <div class="form-group">
+              <label>가격/비용 체감</label>
+              <input type="text" name="structured.general_info.cost_impression" placeholder="예: 2인 기준 3~4만원대, 합리적"
+                maxlength="100">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>소요 시간/대기 체감</label>
+              <input type="text" name="structured.general_info.time_impression" placeholder="예: 주문 후 15분 내 음식 제공"
+                maxlength="100">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="pros_cons">
+            <h3 style="margin:0 0 8px 0;">장점/아쉬움</h3>
+            <div class="form-group">
+              <label>좋았던 점</label>
+              <input type="text" name="structured.general_info.pros" placeholder="예: 양이 푸짐하고 응대가 빠름" maxlength="120">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>아쉬운 점</label>
+              <input type="text" name="structured.general_info.cons" placeholder="예: 주말 피크타임엔 소음이 있음" maxlength="120">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="tips_caution">
+            <h3 style="margin:0 0 8px 0;">팁/주의사항</h3>
+            <div class="form-group">
+              <label>팁</label>
+              <input type="text" name="structured.general_info.tip" placeholder="예: 오픈 30분 전 도착하면 웨이팅 감소"
+                maxlength="120">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>주의사항</label>
+              <input type="text" name="structured.general_info.caution" placeholder="예: 주차장 만차가 잦아 대중교통 권장"
+                maxlength="120">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="visit_context">
+            <h3 style="margin:0 0 8px 0;">방문 상황</h3>
+            <div class="form-group">
+              <label>누구와 갔나요?</label>
+              <select name="structured.visit_context.who_with">
+                <option value="">선택</option>
+                <option value="alone">혼자</option>
+                <option value="friends">친구</option>
+                <option value="family">가족</option>
+                <option value="couple">연인</option>
+                <option value="kids">아이동반</option>
+                <option value="other">기타</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>언제 갔나요?</label>
+              <select name="structured.visit_context.when">
+                <option value="">선택</option>
+                <option value="weekday_lunch">평일 점심</option>
+                <option value="weekday_dinner">평일 저녁</option>
+                <option value="weekend_lunch">주말 점심</option>
+                <option value="weekend_dinner">주말 저녁</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>목적/분위기(짧게)</label>
+              <input type="text" name="structured.visit_context.purpose" placeholder="예: 오랜만에 수다 + 맛집 탐방"
+                maxlength="60">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>당시 기분/무드</label>
+              <input type="text" name="structured.visit_context.mood" placeholder="예: 들뜸, 편안함, 힐링"
+                maxlength="40">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="location">
+            <h3 style="margin:0 0 8px 0;">위치/주차/웨이팅</h3>
+            <div class="form-group">
+              <label>지역/근처 랜드마크</label>
+              <input type="text" name="structured.location_info.area" placeholder="예: 안성 스타필드 근처" maxlength="60">
+            </div>
+            <div class="form-group">
+              <label>주차</label>
+              <select name="structured.location_info.parking">
+                <option value="">모름</option>
+                <option value="easy">편함</option>
+                <option value="ok">보통</option>
+                <option value="hard">불편</option>
+                <option value="none">불가</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>대기/웨이팅</label>
+              <select name="structured.service_info.waiting">
+                <option value="">모름</option>
+                <option value="none">없음</option>
+                <option value="short">조금</option>
+                <option value="long">많음</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>근처 연계(카페/코스)</label>
+              <input type="text" name="structured.location_info.nearby_spots" placeholder="예: 근처 카페 많아서 2차 가기 좋음"
+                maxlength="80">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>접근성(도보/유모차/대중교통 등)</label>
+              <input type="text" name="structured.location_info.accessibility" placeholder="예: 주차장 가까워 이동 편함"
+                maxlength="80">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="food">
+            <h3 style="margin:0 0 8px 0;">메뉴/맛</h3>
+            <div class="form-group">
+              <label>메인 메뉴</label>
+              <input type="text" name="structured.menu_info.main_menu" placeholder="예: 곱창전골" maxlength="40">
+            </div>
+            <div class="form-group">
+              <label>같이 먹은 메뉴(콤마)</label>
+              <input type="text" name="structured.menu_info.other_menu" placeholder="예: 감자전, 볶음밥" maxlength="80">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>맛 포인트(콤마)</label>
+              <input type="text" name="structured.menu_info.taste_points" placeholder="예: 얼큰함, 잡내없음, 푸짐함"
+                maxlength="100">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>가격/비용 체감</label>
+              <input type="text" name="structured.menu_info.price_impression" placeholder="예: 2인 기준 3~4만원대"
+                maxlength="80">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="service">
+            <h3 style="margin:0 0 8px 0;">서비스/분위기</h3>
+            <div class="form-group">
+              <label>사장님/직원 응대</label>
+              <select name="structured.service_info.staff_attitude">
+                <option value="">선택</option>
+                <option value="kind">친절</option>
+                <option value="normal">보통</option>
+                <option value="bad">아쉬움</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>혼잡도</label>
+              <select name="structured.service_info.crowd_level">
+                <option value="">선택</option>
+                <option value="low">여유로움</option>
+                <option value="medium">보통</option>
+                <option value="high">혼잡함</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>매장 분위기(짧게)</label>
+              <input type="text" name="structured.service_info.interior" placeholder="예: 목재 인테리어, 쾌적함" maxlength="80">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="hospital">
+            <h3 style="margin:0 0 8px 0;">병원 상세</h3>
+            <div class="form-group">
+              <label>진료과/기관</label>
+              <input type="text" name="structured.hospital_info.department" placeholder="예: 소아과, 정형외과" maxlength="60">
+            </div>
+            <div class="form-group">
+              <label>방문 사유/증상</label>
+              <input type="text" name="structured.hospital_info.reason" placeholder="예: 감기 증상, 무릎 통증" maxlength="120">
+            </div>
+            <div class="form-group">
+              <label>진료/검사 과정</label>
+              <input type="text" name="structured.hospital_info.process" placeholder="예: 접수-대기-진료-처방" maxlength="120">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>처방/경과 메모</label>
+              <input type="text" name="structured.hospital_info.followup" placeholder="예: 3일 복용, 재방문 권장"
+                maxlength="120">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="parenting">
+            <h3 style="margin:0 0 8px 0;">육아 포인트</h3>
+            <div class="form-group">
+              <label>아이 월령/연령</label>
+              <input type="text" name="structured.parenting_info.child_stage" placeholder="예: 13개월, 5세" maxlength="40">
+            </div>
+            <div class="form-group">
+              <label>상황/활동</label>
+              <input type="text" name="structured.parenting_info.situation" placeholder="예: 낮잠 후 산책, 책육아"
+                maxlength="100">
+            </div>
+            <div class="form-group">
+              <label>아이 반응</label>
+              <input type="text" name="structured.parenting_info.reaction" placeholder="예: 집중해서 봄, 금방 흥미 잃음"
+                maxlength="100">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>부모 팁/메모</label>
+              <input type="text" name="structured.parenting_info.tip" placeholder="예: 15분 단위로 끊어주면 좋았음" maxlength="120">
+            </div>
+          </div>
+
+          <div class="step1-block-panel" data-block-panel="notes">
+            <h3 style="margin:0 0 8px 0;">추가 메모</h3>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>기타 기록</label>
+              <textarea id="briefMemo" name="structured.extra_notes" rows="3"
+                placeholder="예: 매운맛은 생각보다 덜 자극적. 사리 추가 추천!" maxlength="400"></textarea>
+            </div>
+          </div>
+        </div>
+      </details>
+      <div id="step1Error" class="status-box error" style="display:none;"></div>
+
+      <div class="nav-actions">
+        <div></div>
+        <button type="button" id="toStep2" class="btn" onclick="goToStep2FromStep1()">다음 → 미디어 업로드</button>
+      </div>
+    </div>
+
+    <!-- Step 2: 미디어 업로드 -->
+    <div class="step-content" id="step2">
+      <h2 class="step-title">2. 미디어 업로드 및 설명 입력</h2>
+      <p class="note" style="margin-left:0; margin-bottom:15px;">사진/영상을 업로드하고 순서와 설명을 직접 입력하세요. (AI 자동분석 없음)</p>
+
+      <div class="form-group">
+        <input type="file" id="mediaInput" multiple accept="image/*,video/*"
+          style="border:1px dashed var(--brand); padding:30px; text-align:center; background:#f0fdf4; cursor:pointer;"
+          onchange="handleMediaUpload(event)">
+      </div>
+
+      <div class="media-list" id="mediaList">
+        <div class="note">업로드된 미디어가 없습니다.</div>
+      </div>
+
+      <div id="step2Error" class="status-box error" style="display:none;"></div>
+
+      <div class="nav-actions">
+        <button type="button" id="backToStep1" class="btn btn-secondary" onclick="goToStep(1)">◀ 이전</button>
+        <button type="button" id="toStep3" class="btn" onclick="preparePayloadAndGoStep4()">다음 → 글 생성</button>
+      </div>
+    </div>
+
+    <!-- Step 3: 비활성 안내 -->
+    <div class="step-content" id="step3">
+      <h2 class="step-title">3. Outline 단계 비활성화</h2>
+      <div class="status-box info" style="display:block;">
+        현재 MVP에서는 Outline 생성/컨펌을 사용하지 않습니다.<br>
+        Step1 + Step2 입력으로 바로 최종 글 생성을 진행합니다.
+      </div>
+      <div class="nav-actions">
+        <button class="btn btn-secondary" onclick="goToStep(2)">◀ 이전</button>
+        <button class="btn" onclick="goToStep(4)">Step4로 이동</button>
+      </div>
+    </div>
+
+    <!-- Step 4: 생성 및 퇴고 -->
+    <div class="step-content" id="step4">
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--line); margin: 0 0 20px 0; padding-bottom: 10px;">
+        <h2 class="step-title" style="border:none; margin:0; padding:0;">4. 최종 블로그 원고 작성</h2>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12px;"
+            onclick="saveStepDraft(true)">💾 1/2 저장</button>
+          <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12px;"
+            onclick="loadStepDraft(true)">📂 1/2 불러오기</button>
+          <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12px;" id="btnPromptStep4"
+            onclick="previewFinalPrompt()">프롬프트 보기</button>
+          <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12px;"
+            id="btnRawResponseStep4" onclick="showRawAiResponses()" disabled>🤖 AI 응답 보기</button>
+        </div>
+      </div>
+
+      <div class="form-group"
+        style="background:#f9fafb; padding:15px; border-radius:8px; border:1px solid #e5e7eb; margin-bottom:20px;">
+        <label>글쓰기 세부 옵션 <span class="note">(AI 프롬프트 반영)</span></label>
+        <label class="radio-card" style="margin-bottom:8px;"><input type="checkbox" id="optNegative" checked> '알아보았습니다',
+          '도움이 되셨길 바랍니다' 등 AI 기계적 말투 금지</label>
+        <label class="radio-card" style="margin-bottom:8px;"><input type="checkbox" id="optHashtag" checked> 네이버 검색용
+          해시태그 10개 추출</label>
+        <label class="radio-card" style="margin-bottom:8px;"><input type="checkbox" id="optStyle" checked> 내 예전 글
+          말투(Style Profile) 전면 반영</label>
+      </div>
+
+      <div class="form-group">
+        <label>최종 제목 <span class="note">(비어있으면 한 줄 요약을 제목으로 사용)</span></label>
+        <input type="text" id="finalTitleInput" placeholder="예: 성수동 카페 방문 후기, 메뉴/웨이팅 정리">
+      </div>
+
+      <div id="step4Loader" class="status-box info" style="display:none;">
+        Step1/2 구조화 입력을 바탕으로 최종 원고를 생성하고 있습니다. (약 30~60초 소요)
+      </div>
+
+      <div class="nav-actions" id="step4Actions">
+        <button class="btn btn-secondary" onclick="goToStep(2)">◀ 이전</button>
+        <button class="btn" onclick="startFinalGeneration()"> AI 최종 블로그 원고 작성</button>
+      </div>
+
+      <div id="step4Result" style="display:none;">
+        <div class="form-group">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <label style="margin:0;">네이버 블로그 미리보기 (서식 포함)</label>
+            <button type="button" class="btn" style="padding:6px 12px; font-size:12px; background:#03c75a;"
+              onclick="copyForNaver()">📋 네이버용(서식 포함) 복사하기</button>
+          </div>
+          <div id="naverPreview"
+            style="border:1px solid var(--line); border-radius:8px; padding:20px; min-height:300px; line-height:1.8; font-size:15px; background:#fff;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>마크다운 원문 <span class="note">(복사해서 붙여넣기 하세요)</span></label>
+          <textarea id="finalMarkdown" style="min-height:200px; font-size:13px;"></textarea>
+        </div>
+
+        <div class="form-group" id="titleSuggestionsWrap" style="display:none;">
+          <label>AI 제목 추천 <span class="note">(클릭하면 최종 제목 입력칸에 적용)</span></label>
+          <div id="titleSuggestions"
+            style="display:flex; flex-wrap:wrap; gap:8px; padding:12px; border:1px solid var(--line); border-radius:8px; background:#f8fafc;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>추천 해시태그</label>
+          <div id="finalHashtags"
+            style="padding:15px; background:#eef2ff; color:#3730a3; border-radius:8px; font-weight:bold; word-break:keep-all;">
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn btn-secondary" onclick="goToStep(2)">◀ 입력 다시 보기</button>
+        <button class="btn" onclick="uiAlert('복사 완료', '글 생성이 완료되었습니다.<br>클립보드에 복사된 내용을 네이버 블로그에 붙여넣으세요!')">작업 완료
+          🎉</button>
+      </div>
+    </div>
+
+    <!-- Prompt Modal -->
+    <div class="modal-overlay" id="promptModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>AI 요청 프롬프트 (JSON)</h3>
+          <button class="modal-close"
+            onclick="document.getElementById('promptModal').classList.remove('active')">&#215;</button>
+        </div>
+        <div class="modal-body" id="promptModalBody"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+            </path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+            </path>
+          </svg> 환경 설정</h3>
+        <button class="modal-close" onclick="saveSettingsAndClose()">&#215;</button>
+      </div>
+
+      <div class="settings-container">
+        <!-- Sidebar Tabs -->
+        <div class="settings-sidebar">
+          <div class="settings-tab active" onclick="switchSettingsTab(event, 'tab-ai')">AI 모델 설정</div>
+          <div class="settings-tab" onclick="switchSettingsTab(event, 'tab-style')">스타일 추출</div>
+          <div class="settings-tab" onclick="switchSettingsTab(event, 'tab-persona')">페르소나 설정</div>
+          <div class="settings-tab" onclick="switchSettingsTab(event, 'tab-meme')">밈 저장소</div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="settings-content-area">
+          <!-- Tab 1: AI 모델 설정 -->
+          <div class="settings-pane active" id="tab-ai">
+            <div class="form-group">
+              <label>AI 언어 모델 제공자</label>
+              <div class="radio-card" style="cursor:default; background:#f8fafc;">
+                <input type="radio" checked disabled>
+                <span><strong>OpenAI</strong>만 사용</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:20px;">
+              <label>OpenAI 세부 모델 선택</label>
+              <select id="settingOpenaiModel"
+                style="width:100%; padding:10px; border-radius:6px; border:1px solid #e2e8f0; font-size:14px;">
+                <option value="gpt-5.2" selected>GPT-5.2 (기본)</option>
+                <option value="gpt-5.2-mini">GPT-5.2-mini</option>
+                <option value="gpt-5.2-nano">GPT-5.2-nano</option>
+                <option value="gpt-4o-mini">GPT-4o Mini</option>
+                <option value="gpt-4o">GPT-4o</option>
+                <option value="gpt-5-mini">GPT-5-mini</option>
+                <option value="gpt-5-nano">GPT-5-nano</option>
+              </select>
+              <input type="text" id="settingOpenaiModelCustom" placeholder="커스텀 모델명 (선택, 예: gpt-5.2-custom)"
+                style="width:100%; margin-top:8px; padding:10px; border-radius:6px; border:1px solid #e2e8f0; font-size:14px;">
+            </div>
+          </div>
+
+          <!-- Tab 2: 글쓰기 스타일 설정 -->
+          <div class="settings-pane" id="tab-style">
+            <h4 style="margin-top:0; font-size:18px; color:var(--label);">내 블로그 글쓰기 스타일(문체) 추출</h4>
+            <p style="font-size:14px; color:var(--secondary-label); margin-bottom:15px; line-height:1.5;">내 네이버 블로그 포스팅
+              URL을 여러 개
+              입력하면 AI가 내 말투, 이모지 사용 빈도, 단락 구성 패턴 등을 정밀 분식하여 <strong>'나만의 맞춤 페르소나'</strong>를 만듭니다.<br>추출한 스타일은 최종 리뷰어
+              단계에서 자동 반영됩니다.</p>
+            <div class="form-group">
+              <label>블로그 포스팅 URL <span class="note">(최대 10개)</span></label>
+              <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <input type="text" id="styleUrlInput" placeholder="https://blog.naver.com/..." style="flex:1;"
+                  onkeypress="if(event.key === 'Enter') addStyleUrl()">
+                <button type="button" class="btn btn-outline" style="white-space:nowrap; padding: 0 20px;"
+                  onclick="addStyleUrl()">추가</button>
+              </div>
+              <div id="styleUrlList"
+                style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; padding-right:5px;">
+              </div>
+              <!-- Hidden to keep backward compatibility with existing JS logic -->
+              <textarea id="settingBlogUrls" style="display:none;"></textarea>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button class="btn" style="flex:1; justify-content:center;" onclick="runStyleExtraction(event)">스타일 프로필
+                추출 시작 </button>
+              <button type="button" class="btn btn-outline" id="btnStyleRawResponse"
+                style="white-space:nowrap; padding:0 16px;" onclick="showStyleRawAiResponses()" disabled>🤖 AI 응답
+                보기</button>
+            </div>
+            <div id="styleExtractionResult" style="margin-top:20px; font-size:14px; line-height:1.6; display:none;">
+            </div>
+          </div>
+
+          <div class="settings-pane" id="tab-persona">
+            <h4 style="margin-top:0; font-size:18px; color:var(--label);">블로그 페르소나</h4>
+            <p style="font-size:14px; color:var(--secondary-label); margin-bottom:15px; line-height:1.5;">
+              최종 원고 생성 시 페르소나를 함께 전달합니다. 어떤 사람의 관점으로, 누구에게, 어떤 목적으로 글을 쓰는지 간단히 적어주세요.
+            </p>
+            <div class="form-group">
+              <label>나는 누구인가요? (블로그 화자)</label>
+              <input type="text" id="personaIdentity" maxlength="120" placeholder="예: 경기 남부 맛집 위주로 기록하는 주말 가족외식 블로거">
+            </div>
+            <div class="form-group">
+              <label>블로그 핵심 주제</label>
+              <input type="text" id="personaBlogFocus" maxlength="120" placeholder="예: 안성/평택 맛집, 아이동반 외식, 주차 팁">
+            </div>
+            <div class="form-group">
+              <label>주요 독자층</label>
+              <input type="text" id="personaTargetReader" maxlength="120" placeholder="예: 주말에 아이와 외식할 식당 찾는 부모">
+            </div>
+            <div class="form-group">
+              <label>글의 목표</label>
+              <input type="text" id="personaGoal" maxlength="120" placeholder="예: 실제 방문 동선/메뉴 선택에 바로 도움 되는 글">
+            </div>
+            <div class="form-group">
+              <label>추가 톤 메모</label>
+              <textarea id="personaToneNote" rows="3" maxlength="300"
+                placeholder="예: 친근한 말투, 과장 없이 솔직하게, 마지막엔 질문으로 마무리"></textarea>
+            </div>
+            <button type="button" class="btn" onclick="savePersonaSettings()">페르소나 저장</button>
+          </div>
+
+          <!-- Tab 3: 밈 저장소 -->
+          <div class="settings-pane" id="tab-meme">
+            <h4 style="margin-top:0; font-size:18px; color:var(--label);">자주 쓰는 짤방/밈(Meme) 보관함</h4>
+            <p style="font-size:14px; color:var(--secondary-label); margin-bottom:15px; line-height:1.5;">글 작성 중간중간 삽입하고
+              싶은 이미지
+              URL을 모아두는 곳입니다. 저장해둔 이미지는 클립보드에 바로 복사해 네이버 블로그 에디터에 붙여넣기 할 수 있습니다.</p>
+            <div class="form-group" style="display:flex; gap:8px;">
+              <input type="text" id="memeInput" placeholder="이미지 또는 짤방 URL 주소 입력..." style="flex:1;">
+              <button class="btn btn-outline" style="white-space:nowrap; padding: 0 20px;"
+                onclick="addMeme()">추가</button>
+            </div>
+            <div id="memeGrid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:20px;">
+              <!-- Memes will be injected here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:15px 20px; text-align:right; border-top:1px solid #e2e8f0; background:white;">
+        <button class="btn bg-gray" style="background:#e2e8f0; color:#475569; margin-right:8px;"
+          onclick="document.getElementById('settingsModal').classList.remove('active')">취소</button>
+        <button class="btn" onclick="saveSettingsAndClose()">설정 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Golden Keyword Modal -->
+  <div class="modal-overlay" id="goldenModal">
+    <div class="modal-content" style="max-height: 90vh;">
+      <div class="modal-header">
+        <h3>🔍 네이버 황금키워드 탐색기</h3>
+        <button class="modal-close"
+          onclick="document.getElementById('goldenModal').classList.remove('active')">&#215;</button>
+      </div>
+      <div class="modal-body"
+        style="padding: 15px; background: white; flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="goldenSearchInput" placeholder="핵심 키워드 검색 (예: 기저귀)" style="flex:1;"
+            onkeypress="if(event.key === 'Enter') searchGolden(1)">
+          <button type="button" class="btn" style="padding:10px 16px; white-space:nowrap;"
+            onclick="searchGolden(1)">검색</button>
+        </div>
+
+        <div style="flex:1; overflow-y:auto; margin-top:20px; display:flex; flex-direction:column;"
+          id="goldenResultList">
+          <!-- Items injected here -->
+          <div style="text-align:center; padding: 40px 20px; color: var(--muted); font-size:14px;">
+            키워드를 검색하면 연관 키워드들의 경쟁도(포화도)를 분석해 보여줍니다.<br>
+            (모바일 및 PC 검색량, 총 문서 수 파악)
+          </div>
+        </div>
+
+        <div id="goldenPagination" class="golden-pagination" style="display:none;">
+          <!-- Pagination injected here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    /** ---------------------------
+     *  1) markdown -> naver HTML 변환 함수
+     * ----------------------------------- */
+    function markdownToNaver(markdown) {
+      const { cleaned, title, tags } = extractFrontMatter(markdown);
+
+      let pre = convertHugoFigureShortcode(cleaned);
+
+      marked.setOptions({
+        gfm: true,
+        breaks: true,
+      });
+
+      const rawHtml = marked.parse(pre);
+      const finalHtml = postprocessForNaver(rawHtml);
+      return { html: finalHtml, title, tags };
+    }
+
+    /** -------------------------------------
+     *  2) Naver 미리보기 함수
+     * -------------------------------------- */
+    function renderNaverPreview(container, naverHtml) {
+      if (!container) throw new Error("container가 필요합니다.");
+
+      const baseStyle = `
+    <style>
+      .naver-preview {
+        font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+          "Noto Sans KR", "Segoe UI", Roboto, Arial, sans-serif;
+        line-height: 1.65;
+        font-size: 15px;
+        color: #222;
+      }
+      .naver-preview h1,.naver-preview h2,.naver-preview h3 {
+        line-height: 1.25;
+        margin: 18px 0 10px;
+        font-weight: 700;
+      }
+      .naver-preview p { margin: 10px 0; }
+      .naver-preview ul, .naver-preview ol { margin: 10px 0 10px 22px; }
+      .naver-preview blockquote {
+        margin: 12px 0;
+        padding: 10px 12px;
+        border-left: 3px solid #ddd;
+        background: #fafafa;
+      }
+      .naver-preview table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+      }
+      .naver-preview td, .naver-preview th {
+        border: 1px solid #e5e5e5;
+        padding: 8px 10px;
+        vertical-align: top;
+      }
+      .naver-preview img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 10px 0;
+      }
+      .naver-preview .figure-caption {
+        font-size: 13px;
+        color: #666;
+        margin-top: 6px;
+      }
+      .naver-preview .code-block {
+        margin: 12px 0;
+        padding: 12px 14px;
+        border: 1px solid #eee;
+        background: #0b0f14;
+        color: #e6edf3;
+        border-radius: 10px;
+        overflow-x: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 13px;
+        line-height: 1.55;
+        white-space: pre;
+      }
+      .naver-preview a { color: inherit; text-decoration: underline; }
+      .naver-preview hr { border: 0; border-top: 1px solid #eee; margin: 18px 0; }
+    </style>
+  `;
+
+      container.innerHTML = `${baseStyle}<div class="naver-preview">${naverHtml}</div>`;
+    }
+
+    function extractFrontMatter(md) {
+      const fm = md.match(/^---\s*[\r\n]+([\s\S]*?)\s*[\r\n]+---\s*[\r\n]+/);
+      if (!fm) return { cleaned: md, title: undefined, tags: undefined };
+
+      const block = fm[1] || "";
+      const titleMatch = block.match(/^\s*title\s*:\s*["']?(.+?)["']?\s*$/m);
+      const title = titleMatch ? titleMatch[1].trim() : undefined;
+
+      let tags;
+      const tagsMatch = block.match(/^\s*tags\s*:\s*\[(.*?)\]\s*$/m);
+      if (tagsMatch) {
+        tags = tagsMatch[1]
+          .split(",")
+          .map((s) => s.trim().replace(/^["']|["']$/g, ""))
+          .filter(Boolean)
+          .join(" ");
+      }
+
+      const cleaned = md.replace(fm[0], "");
+      return { cleaned, title, tags };
+    }
+
+    function convertHugoFigureShortcode(md) {
+      return md.replace(/{{<\s*figure\s+([^>]+?)\s*>}}/g, (_, attrs) => {
+        const getAttr = (name) => {
+          const m = attrs.match(new RegExp(`${name}\\s*=\\s*"(.*?)"`));
+          return m ? m[1] : "";
+        };
+        const src = getAttr("src");
+        const alt = getAttr("alt") || getAttr("title") || "";
+        const caption = getAttr("caption") || "";
+
+        if (!src) return "";
+        const capHtml = caption
+          ? `<div class="figure-caption">${escapeHtml(caption)}</div>`
+          : "";
+        return `<div class="figure"><img src="${escapeHtml(src)}" alt="${escapeHtml(
+          alt
+        )}" />${capHtml}</div>`;
+      });
+    }
+
+    function postprocessForNaver(html) {
+      const doc = new DOMParser().parseFromString(`<div id="root">${html}</div>`, "text/html");
+      const root = doc.querySelector("#root");
+
+      root.querySelectorAll("p").forEach((p) => {
+        if (p.textContent.trim() === "" && p.children.length === 0) {
+          p.innerHTML = "&nbsp;";
+        }
+      });
+
+      root.querySelectorAll("td p, th p").forEach((p) => {
+        const parent = p.parentElement;
+        while (p.firstChild) parent.insertBefore(p.firstChild, p);
+        parent.removeChild(p);
+      });
+
+      root.querySelectorAll("p").forEach((p) => {
+        const imgs = Array.from(p.querySelectorAll("img"));
+        if (imgs.length === 1 && p.textContent.trim() === "" && p.children.length === 1) {
+          const div = doc.createElement("div");
+          div.appendChild(imgs[0]);
+          p.replaceWith(div);
+        }
+      });
+
+      root.querySelectorAll("pre > code").forEach((codeEl) => {
+        if (typeof hljs !== 'undefined') hljs.highlightElement(codeEl);
+        inlineStyleHljsSpans(codeEl);
+        const pre = codeEl.parentElement;
+        const wrapper = doc.createElement("div");
+        wrapper.className = "code-block";
+        wrapper.innerHTML = codeEl.innerHTML;
+        pre.replaceWith(wrapper);
+      });
+
+      return root.innerHTML;
+    }
+
+    function inlineStyleHljsSpans(scopeEl) {
+      const map = {
+        "hljs-comment": "color:#8b949e;",
+        "hljs-quote": "color:#8b949e;",
+        "hljs-keyword": "color:#ff7b72;font-weight:600;",
+        "hljs-selector-tag": "color:#ff7b72;",
+        "hljs-literal": "color:#79c0ff;",
+        "hljs-number": "color:#79c0ff;",
+        "hljs-string": "color:#a5d6ff;",
+        "hljs-title": "color:#d2a8ff;font-weight:600;",
+        "hljs-section": "color:#d2a8ff;font-weight:600;",
+        "hljs-name": "color:#d2a8ff;",
+        "hljs-type": "color:#ffa657;",
+        "hljs-attr": "color:#ffa657;",
+        "hljs-attribute": "color:#ffa657;",
+        "hljs-built_in": "color:#ffa657;",
+        "hljs-params": "color:#c9d1d9;",
+        "hljs-variable": "color:#c9d1d9;",
+        "hljs-symbol": "color:#79c0ff;",
+        "hljs-bullet": "color:#79c0ff;",
+        "hljs-meta": "color:#8b949e;",
+        "hljs-emphasis": "font-style:italic;",
+        "hljs-strong": "font-weight:700;",
+      };
+
+      scopeEl.querySelectorAll("span").forEach((span) => {
+        const cls = span.className || "";
+        const hit = cls
+          .split(/\s+/)
+          .map((c) => map[c])
+          .filter(Boolean)
+          .join("");
+        if (hit) {
+          span.setAttribute("style", (span.getAttribute("style") || "") + hit);
+          span.removeAttribute("class");
+        }
+      });
+
+      scopeEl.removeAttribute("class");
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    // --- UI Navigation ---
+    let currentStep = 1;
+    let appState = { structuredInfo: null, mediaMeta: [], payload: null };
+    const DEFAULT_PERSONA = {
+      identity: "",
+      blog_focus: "",
+      target_reader: "",
+      goal: "",
+      tone_note: "",
+    };
+    const appSetup = {
+      styleConfigured: false,
+      personaConfigured: false,
+      styleRawJson: null,
+    };
+    let appAuth = {
+      loggedIn: false,
+      email: "",
+      tokenBalance: 0,
+      persona: { ...DEFAULT_PERSONA },
+    };
+    const STEP_DRAFT_STORAGE_KEY = "blogAuto.step12Draft.v1";
+    let draftAutosaveTimer = null;
+
+    function normalizePersona(obj) {
+      const src = obj && typeof obj === "object" ? obj : {};
+      return {
+        identity: String(src.identity || "").trim(),
+        blog_focus: String(src.blog_focus || "").trim(),
+        target_reader: String(src.target_reader || "").trim(),
+        goal: String(src.goal || "").trim(),
+        tone_note: String(src.tone_note || "").trim(),
+      };
+    }
+
+    function hasConfiguredPersona(persona) {
+      const p = normalizePersona(persona);
+      return Boolean(p.identity || p.blog_focus || p.target_reader || p.goal || p.tone_note);
+    }
+
+    function hasConfiguredStyle(rawJson) {
+      if (!rawJson || typeof rawJson !== "object") return false;
+      const guide = rawJson.style_guide && typeof rawJson.style_guide === "object"
+        ? rawJson.style_guide
+        : rawJson;
+      return Boolean(guide && Object.keys(guide).length > 0);
+    }
+
+    function getStyleRawCacheKey() {
+      const key = appAuth?.email ? appAuth.email : "guest";
+      return `styleProfileRawJson:${key}`;
+    }
+
+    function getBlogUrlsCacheKey() {
+      const key = appAuth?.email ? appAuth.email : "guest";
+      return `blogUrls:${key}`;
+    }
+
+    function resolveOpenaiModelFromSettings() {
+      const custom = String(document.getElementById('settingOpenaiModelCustom')?.value || '').trim();
+      if (custom) return custom;
+      return String(document.getElementById('settingOpenaiModel')?.value || 'gpt-5.2').trim() || 'gpt-5.2';
+    }
+
+    function setPersonaFormValues(persona = DEFAULT_PERSONA) {
+      const p = normalizePersona(persona);
+      const map = {
+        personaIdentity: p.identity,
+        personaBlogFocus: p.blog_focus,
+        personaTargetReader: p.target_reader,
+        personaGoal: p.goal,
+        personaToneNote: p.tone_note,
+      };
+      Object.entries(map).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value;
+      });
+    }
+
+    function readPersonaFormValues() {
+      return normalizePersona({
+        identity: document.getElementById("personaIdentity")?.value || "",
+        blog_focus: document.getElementById("personaBlogFocus")?.value || "",
+        target_reader: document.getElementById("personaTargetReader")?.value || "",
+        goal: document.getElementById("personaGoal")?.value || "",
+        tone_note: document.getElementById("personaToneNote")?.value || "",
+      });
+    }
+
+    function updateAuthUi() {
+      const loggedOut = document.getElementById("authLoggedOut");
+      const loggedIn = document.getElementById("authLoggedIn");
+      const emailEl = document.getElementById("authEmailText");
+      const tokenEl = document.getElementById("authTokenBalance");
+      if (loggedOut) loggedOut.style.display = appAuth.loggedIn ? "none" : "inline-flex";
+      if (loggedIn) loggedIn.style.display = appAuth.loggedIn ? "inline-flex" : "none";
+      if (emailEl) emailEl.innerText = appAuth.email || "-";
+      if (tokenEl) tokenEl.innerText = String(Number(appAuth.tokenBalance || 0));
+
+      const loginLink = document.getElementById("googleLoginLink");
+      if (loginLink) {
+        loginLink.href = `/auth/google/login?next=${encodeURIComponent(window.location.pathname || "/")}`;
+      }
+      const setupLoginBtn = document.getElementById("setupLoginBtn");
+      if (setupLoginBtn) {
+        setupLoginBtn.href = `/auth/google/login?next=${encodeURIComponent(window.location.pathname || "/")}`;
+      }
+    }
+
+    function isWorkflowUnlocked() {
+      return Boolean(appAuth.loggedIn && appSetup.styleConfigured && appSetup.personaConfigured);
+    }
+
+    function updateSetupGateUi() {
+      const gate = document.getElementById("setupGate");
+      const msg = document.getElementById("setupGateMsg");
+      const loginItem = document.getElementById("setupLoginItem");
+      const styleItem = document.getElementById("setupStyleItem");
+      const personaItem = document.getElementById("setupPersonaItem");
+      const loginLabel = document.getElementById("setupLoginLabel");
+      const styleLabel = document.getElementById("setupStyleLabel");
+      const personaLabel = document.getElementById("setupPersonaLabel");
+      const setupLoginBtn = document.getElementById("setupLoginBtn");
+      const setupStyleBtn = document.getElementById("setupStyleBtn");
+      const setupPersonaBtn = document.getElementById("setupPersonaBtn");
+      const workflowLocked = !isWorkflowUnlocked();
+      const currentRequiredStep = !appAuth.loggedIn ? 1 : !appSetup.styleConfigured ? 2 : !appSetup.personaConfigured ? 3 : 0;
+
+      if (gate) gate.style.display = workflowLocked ? "block" : "none";
+
+      if (loginItem) {
+        loginItem.classList.toggle("ok", appAuth.loggedIn);
+        loginItem.classList.toggle("current", currentRequiredStep === 1);
+      }
+      if (loginLabel) {
+        loginLabel.innerText = appAuth.loggedIn ? "1) Google 로그인 완료" : "1) Google 로그인 필요";
+      }
+      if (setupLoginBtn) {
+        setupLoginBtn.style.display = currentRequiredStep === 1 ? "inline-flex" : "none";
+      }
+      if (styleItem) {
+        styleItem.classList.toggle("ok", appSetup.styleConfigured);
+        styleItem.classList.toggle("current", currentRequiredStep === 2);
+      }
+      if (styleLabel) {
+        styleLabel.innerText = appSetup.styleConfigured ? "2) 스타일 추출 완료" : "2) 스타일 추출 필요";
+      }
+      if (setupStyleBtn) {
+        setupStyleBtn.style.display = currentRequiredStep === 2 ? "inline-flex" : "none";
+      }
+      if (personaItem) {
+        personaItem.classList.toggle("ok", appSetup.personaConfigured);
+        personaItem.classList.toggle("current", currentRequiredStep === 3);
+      }
+      if (personaLabel) {
+        personaLabel.innerText = appSetup.personaConfigured ? "3) 페르소나 저장 완료" : "3) 페르소나 저장 필요";
+      }
+      if (setupPersonaBtn) {
+        setupPersonaBtn.style.display = currentRequiredStep === 3 ? "inline-flex" : "none";
+      }
+
+      if (msg) {
+        if (!appAuth.loggedIn) {
+          msg.innerText = "Google 로그인 후 스타일/페르소나 설정을 완료하면 Step1을 시작할 수 있습니다.";
+        } else if (!appSetup.styleConfigured) {
+          msg.innerText = "스타일 추출이 아직 없습니다. 설정 탭에서 스타일 추출을 먼저 완료해주세요.";
+        } else if (!appSetup.personaConfigured) {
+          msg.innerText = "페르소나가 비어 있습니다. 설정 탭에서 페르소나를 저장해주세요.";
+        } else {
+          msg.innerText = "모든 사전 설정이 완료되었습니다.";
+        }
+      }
+
+      const wizard = document.getElementById("wizardNav");
+      if (wizard) wizard.classList.toggle("workflow-disabled", workflowLocked);
+      document.querySelectorAll(".step-content").forEach((el) => {
+        el.classList.toggle("workflow-disabled", workflowLocked);
+      });
+    }
+
+    function updateTokenBalanceFromPayload(payload) {
+      const value = Number(payload?.token_balance);
+      if (Number.isFinite(value)) {
+        appAuth.tokenBalance = Math.max(0, Math.floor(value));
+        updateAuthUi();
+      }
+    }
+
+    function ensureLoggedIn() {
+      if (appAuth.loggedIn) return true;
+      uiAlert("로그인 필요", `Google 로그인 후 이용해주세요.<br><br><a href="/auth/google/login?next=${encodeURIComponent(window.location.pathname || "/")}">Google 로그인하러 가기</a>`);
+      return false;
+    }
+
+    function ensureWorkflowReady() {
+      if (isWorkflowUnlocked()) return true;
+      updateSetupGateUi();
+      if (!appAuth.loggedIn) {
+        uiAlert("사전 설정 필요", "먼저 Google 로그인 후 스타일/페르소나 설정을 완료해주세요.");
+        return false;
+      }
+      if (!appSetup.styleConfigured) {
+        openSettingsWithTab("tab-style");
+        uiAlert("스타일 설정 필요", "스타일 추출이 완료되어야 Step1부터 진행할 수 있습니다.");
+        return false;
+      }
+      if (!appSetup.personaConfigured) {
+        openSettingsWithTab("tab-persona");
+        uiAlert("페르소나 설정 필요", "페르소나를 저장한 뒤 진행해주세요.");
+        return false;
+      }
+      return false;
+    }
+
+    function openSettingsWithTab(tabId = "tab-ai") {
+      const modal = document.getElementById("settingsModal");
+      if (modal) modal.classList.add("active");
+      switchSettingsTab(null, tabId);
+    }
+
+    async function refreshAuthState() {
+      try {
+        const res = await fetch("/api/me");
+        const json = await res.json();
+        if (!json?.ok) throw new Error(json?.message || "인증 상태를 불러오지 못했습니다.");
+
+        appAuth.loggedIn = Boolean(json.loggedIn);
+        appAuth.email = json?.user?.email || "";
+        appAuth.tokenBalance = Number(json?.user?.token_balance || 0);
+        appAuth.persona = normalizePersona(json?.persona || DEFAULT_PERSONA);
+        appSetup.personaConfigured = hasConfiguredPersona(appAuth.persona);
+        appSetup.styleConfigured = false;
+        appSetup.styleRawJson = null;
+        setPersonaFormValues(appAuth.persona);
+        updateAuthUi();
+
+        if (appAuth.loggedIn) {
+          try {
+            const stateRes = await fetch("/api/state");
+            const stateJson = await stateRes.json();
+            const rawJson = stateJson?.styleProfile?.llmStyle?.rawJson || null;
+            appSetup.styleRawJson = rawJson;
+            appSetup.styleConfigured = hasConfiguredStyle(rawJson);
+            if (appSetup.styleConfigured) {
+              renderStyleExtractionPanel({
+                headline: "🌟 서버에 저장된 스타일 가이드를 불러왔습니다.",
+                rawObj: rawJson,
+                fallbackPayload: rawJson,
+                note: "현재 로그인 계정 기준 데이터입니다.",
+                persistRaw: true,
+              });
+            } else {
+              const styleRes = document.getElementById("styleExtractionResult");
+              if (styleRes) {
+                styleRes.style.display = "block";
+                styleRes.innerHTML = `
+                  <div style="padding:14px; border:1px solid #fcd34d; border-radius:8px; background:#fffbeb; color:#92400e;">
+                    현재 계정에 저장된 스타일 가이드가 없습니다. 먼저 스타일 추출을 실행해주세요.
+                  </div>
+                `;
+              }
+            }
+          } catch (stateErr) {
+            // ignore and fallback to cache in loadSettings()
+          }
+        }
+        updateSetupGateUi();
+      } catch (err) {
+        appAuth = { loggedIn: false, email: "", tokenBalance: 0, persona: { ...DEFAULT_PERSONA } };
+        appSetup.personaConfigured = false;
+        appSetup.styleConfigured = false;
+        appSetup.styleRawJson = null;
+        const styleRes = document.getElementById("styleExtractionResult");
+        if (styleRes) {
+          styleRes.style.display = "none";
+          styleRes.innerHTML = "";
+        }
+        setPersonaFormValues(DEFAULT_PERSONA);
+        updateAuthUi();
+        updateSetupGateUi();
+      }
+    }
+
+    function safeUuid() {
+      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        return crypto.randomUUID();
+      }
+      return `media_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    }
+
+    function formatSavedAt(savedAt) {
+      const date = new Date(savedAt || "");
+      if (Number.isNaN(date.getTime())) return "알 수 없음";
+      return date.toLocaleString("ko-KR", { hour12: false });
+    }
+
+    function refreshSavedDraftHint() {
+      const hint = document.getElementById("savedDraftHint");
+      if (!hint) return;
+      const raw = localStorage.getItem(STEP_DRAFT_STORAGE_KEY);
+      if (!raw) {
+        hint.innerText = "저장된 1/2단계 입력이 없습니다.";
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        hint.innerText = `저장된 입력 있음: ${formatSavedAt(parsed?.savedAt)} (이 기기 브라우저 localStorage)`;
+      } catch {
+        hint.innerText = "저장된 입력 데이터가 손상되어 있습니다.";
+      }
+    }
+
+    function queueDraftAutosave() {
+      clearTimeout(draftAutosaveTimer);
+      draftAutosaveTimer = setTimeout(() => saveStepDraft(false), 350);
+    }
+
+    function collectStep1FormValues() {
+      const values = {};
+      const fields = [...document.querySelectorAll("#step1 [name]")];
+      fields.forEach((field) => {
+        const name = field.name;
+        if (!name) return;
+        if (field.type === "radio") {
+          if (field.checked) values[name] = String(field.value || "");
+          return;
+        }
+        if (field.type === "checkbox") {
+          values[name] = Boolean(field.checked);
+          return;
+        }
+        values[name] = String(field.value || "");
+      });
+      return values;
+    }
+
+    function applyStep1FormValues(values = {}) {
+      const fields = [...document.querySelectorAll("#step1 [name]")];
+      const grouped = new Map();
+      fields.forEach((field) => {
+        if (!field.name) return;
+        if (!grouped.has(field.name)) grouped.set(field.name, []);
+        grouped.get(field.name).push(field);
+      });
+
+      Object.entries(values || {}).forEach(([name, value]) => {
+        const nodes = grouped.get(name);
+        if (!nodes || !nodes.length) return;
+        const first = nodes[0];
+        if (first.type === "radio") {
+          nodes.forEach((node) => {
+            node.checked = String(node.value || "") === String(value || "");
+          });
+          return;
+        }
+        if (first.type === "checkbox") {
+          first.checked = Boolean(value);
+          return;
+        }
+        first.value = String(value ?? "");
+      });
+    }
+
+    function snapshotMediaItems() {
+      const list = Array.isArray(mediaItems) ? mediaItems : [];
+      return list.map((item) => ({
+        id: String(item?.id || safeUuid()),
+        type: item?.type === "video" ? "video" : "image",
+        fileName: String(item?.fileName || item?.file?.name || ""),
+        meta: {
+          description: String(item?.meta?.description || ""),
+          highlights: String(item?.meta?.highlights || ""),
+          mood: String(item?.meta?.mood || ""),
+        },
+      }));
+    }
+
+    function restoreMediaItems(snapshot = []) {
+      mediaItems = (Array.isArray(snapshot) ? snapshot : []).map((item, idx) => ({
+        id: String(item?.id || safeUuid()),
+        file: null,
+        type: item?.type === "video" ? "video" : "image",
+        fileName: String(item?.fileName || ""),
+        previewUrl: "",
+        meta: {
+          description: String(item?.meta?.description || ""),
+          highlights: String(item?.meta?.highlights || ""),
+          mood: String(item?.meta?.mood || ""),
+        },
+        _restored: true,
+      }));
+      renderMediaList();
+    }
+
+    function saveStepDraft(showToast = true) {
+      const draft = {
+        version: 1,
+        savedAt: new Date().toISOString(),
+        step1: {
+          values: collectStep1FormValues(),
+          selectedBlocks: [...selectedStep1Blocks],
+        },
+        step2: {
+          mediaItems: snapshotMediaItems(),
+        },
+        step4: {
+          finalTitle: String(document.getElementById("finalTitleInput")?.value || ""),
+          optNegative: Boolean(document.getElementById("optNegative")?.checked),
+          optHashtag: Boolean(document.getElementById("optHashtag")?.checked),
+          optStyle: Boolean(document.getElementById("optStyle")?.checked),
+        },
+      };
+
+      localStorage.setItem(STEP_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+      refreshSavedDraftHint();
+
+      if (showToast) {
+        uiAlert("저장 완료", `1/2단계 입력을 저장했습니다.<br>저장 시각: ${formatSavedAt(draft.savedAt)}`);
+      }
+    }
+
+    function loadStepDraft(showToast = true) {
+      const raw = localStorage.getItem(STEP_DRAFT_STORAGE_KEY);
+      if (!raw) {
+        if (showToast) uiAlert("불러오기", "저장된 1/2단계 입력이 없습니다.");
+        refreshSavedDraftHint();
+        return;
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        if (showToast) uiAlert("불러오기 실패", "저장 데이터가 손상되어 불러올 수 없습니다.");
+        return;
+      }
+
+      applyStep1FormValues(parsed?.step1?.values || {});
+      const allBlockIds = new Set([...document.querySelectorAll('#step1 [data-block-id]')].map((el) => el.getAttribute('data-block-id')));
+      const loadedBlocks = Array.isArray(parsed?.step1?.selectedBlocks)
+        ? parsed.step1.selectedBlocks.filter((id) => allBlockIds.has(id))
+        : [];
+
+      if (loadedBlocks.length > 0) {
+        selectedStep1Blocks = new Set(loadedBlocks);
+      } else {
+        applyStep1Preset(false);
+      }
+
+      if (selectedStep1Blocks.size === 0) selectedStep1Blocks.add("notes");
+      renderStep1Blocks();
+
+      restoreMediaItems(parsed?.step2?.mediaItems || []);
+
+      const finalTitleInput = document.getElementById("finalTitleInput");
+      if (finalTitleInput && typeof parsed?.step4?.finalTitle === "string") {
+        finalTitleInput.value = parsed.step4.finalTitle;
+      }
+      const optNegative = document.getElementById("optNegative");
+      const optHashtag = document.getElementById("optHashtag");
+      const optStyle = document.getElementById("optStyle");
+      if (optNegative && typeof parsed?.step4?.optNegative === "boolean") optNegative.checked = parsed.step4.optNegative;
+      if (optHashtag && typeof parsed?.step4?.optHashtag === "boolean") optHashtag.checked = parsed.step4.optHashtag;
+      if (optStyle && typeof parsed?.step4?.optStyle === "boolean") optStyle.checked = parsed.step4.optStyle;
+
+      appState = { structuredInfo: null, mediaMeta: [], payload: null };
+      refreshSavedDraftHint();
+
+      if (showToast) {
+        uiAlert("불러오기 완료", `저장된 1/2단계 입력을 복원했습니다.<br>저장 시각: ${formatSavedAt(parsed?.savedAt)}`);
+      }
+    }
+
+    function clearSavedStepDraft() {
+      localStorage.removeItem(STEP_DRAFT_STORAGE_KEY);
+      refreshSavedDraftHint();
+      uiAlert("삭제 완료", "저장된 1/2단계 입력을 삭제했습니다.");
+    }
+
+    function goToStep(stepNumber) {
+      if (!isWorkflowUnlocked()) {
+        ensureWorkflowReady();
+        return;
+      }
+      if (stepNumber === 3) stepNumber = 4;
+      document.querySelectorAll('.step-item').forEach((item, idx) => {
+        if (idx + 1 === stepNumber) item.classList.add('active');
+        else item.classList.remove('active');
+
+        if (idx + 1 < stepNumber) item.classList.add('completed');
+        else item.classList.remove('completed');
+      });
+
+      document.querySelectorAll('.step-content').forEach((item, idx) => {
+        if (idx + 1 === stepNumber) item.classList.add('active');
+        else item.classList.remove('active');
+      });
+      currentStep = stepNumber;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function getValue(name) {
+      const el = document.querySelector(`[name="${name}"]`);
+      if (!el) return "";
+      if (el.type === "radio") {
+        const checked = document.querySelector(`[name="${name}"]:checked`);
+        return checked ? String(checked.value || "").trim() : "";
+      }
+      return String(el.value || "").trim();
+    }
+
+    function getAllValues(prefix) {
+      const nodes = [...document.querySelectorAll(`[name^="${prefix}"]`)];
+      return nodes.reduce((acc, node) => {
+        acc[node.name] = String(node.value || "").trim();
+        return acc;
+      }, {});
+    }
+
+    function setNested(target, dottedPath, value) {
+      const keys = dottedPath.split('.');
+      let cur = target;
+      for (let i = 0; i < keys.length - 1; i += 1) {
+        const key = keys[i];
+        if (!cur[key] || typeof cur[key] !== 'object') cur[key] = {};
+        cur = cur[key];
+      }
+      cur[keys[keys.length - 1]] = value;
+    }
+
+    function splitCsv(value) {
+      return String(value || "").split(',').map(v => v.trim()).filter(Boolean);
+    }
+
+    function normalizeKeywordsRaw(value) {
+      return splitCsv(value).slice(0, 3).join(', ');
+    }
+
+    function pruneStructuredValue(value) {
+      if (typeof value === "string") {
+        const text = value.trim();
+        return text ? text : undefined;
+      }
+
+      if (Array.isArray(value)) {
+        const arr = value
+          .map((item) => pruneStructuredValue(item))
+          .filter((item) => item !== undefined);
+        return arr.length ? arr : undefined;
+      }
+
+      if (value && typeof value === "object") {
+        const out = {};
+        Object.entries(value).forEach(([key, child]) => {
+          const prunedChild = pruneStructuredValue(child);
+          if (prunedChild !== undefined) out[key] = prunedChild;
+        });
+        return Object.keys(out).length ? out : undefined;
+      }
+
+      if (value === null || value === undefined) return undefined;
+      return value;
+    }
+
+    const step1PresetMap = {
+      visit_review: ["summary_core", "visit_context", "location", "food", "service", "pros_cons", "tips_caution", "notes"],
+      guide_info: ["summary_core", "audience_goal", "cost_time", "tips_caution", "notes"],
+      experience_story: ["summary_core", "visit_context", "service", "pros_cons", "notes"],
+      recommendation_compare: ["summary_core", "audience_goal", "pros_cons", "cost_time", "tips_caution", "notes"],
+    };
+
+    let selectedStep1Blocks = new Set(step1PresetMap.visit_review);
+
+    function renderStep1Blocks() {
+      document.querySelectorAll('#step1 [data-block-id]').forEach((button) => {
+        const blockId = button.getAttribute('data-block-id');
+        button.classList.toggle('active', selectedStep1Blocks.has(blockId));
+      });
+
+      document.querySelectorAll('#step1 [data-block-panel]').forEach((panel) => {
+        const blockId = panel.getAttribute('data-block-panel');
+        panel.classList.toggle('active', selectedStep1Blocks.has(blockId));
+      });
+    }
+
+    function applyStep1Preset(shouldAutosave = true) {
+      const preset = getValue("content_preset") || "visit_review";
+      const nextBlocks = step1PresetMap[preset] || step1PresetMap.visit_review;
+      selectedStep1Blocks = new Set(nextBlocks);
+      renderStep1Blocks();
+      if (shouldAutosave) queueDraftAutosave();
+    }
+
+    function toggleStep1Block(blockId) {
+      if (!blockId) return;
+      if (selectedStep1Blocks.has(blockId)) {
+        selectedStep1Blocks.delete(blockId);
+      } else {
+        selectedStep1Blocks.add(blockId);
+      }
+      if (selectedStep1Blocks.size === 0) selectedStep1Blocks.add("notes");
+      renderStep1Blocks();
+      queueDraftAutosave();
+    }
+
+    function collectStructuredValuesFromSelectedBlocks() {
+      const out = {};
+      const selectedIds = [...selectedStep1Blocks];
+      selectedIds.forEach((blockId) => {
+        const block = document.querySelector(`#step1 [data-block-panel="${blockId}"]`);
+        if (!block) return;
+        const fields = [...block.querySelectorAll('[name^="structured."]')];
+        fields.forEach((field) => {
+          if (!field.name) return;
+          const value = String(field.value || "").trim();
+          out[field.name] = value;
+        });
+      });
+      return out;
+    }
+
+    function formatLine(label, value) {
+      const text = String(value || "").trim();
+      if (!text) return "";
+      return `${label}: ${text}`;
+    }
+
+    function formatCsvLine(label, value) {
+      const arr = splitCsv(value);
+      if (!arr.length) return "";
+      return `${label}: ${arr.join(", ")}`;
+    }
+
+    function isNonEmptyPlainObject(value) {
+      return Boolean(value) && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0;
+    }
+
+    function toPrettyJson(value) {
+      try {
+        return JSON.stringify(value, null, 2);
+      } catch {
+        return String(value || "");
+      }
+    }
+
+    function renderStyleExtractionPanel({
+      headline = "",
+      tone = "success",
+      rawObj = {},
+      fallbackPayload = {},
+      note = "",
+      persistRaw = false,
+    } = {}) {
+      const resDiv = document.getElementById('styleExtractionResult');
+      if (!resDiv) return;
+
+      const hasRawObj = isNonEmptyPlainObject(rawObj);
+      const safeRawObj = hasRawObj ? rawObj : null;
+      const boxBg = tone === "error" ? "#fee2e2" : "#f0fdf4";
+      const boxBorder = tone === "error" ? "#fecaca" : "#bbf7d0";
+      const boxColor = tone === "error" ? "#991b1b" : "#166534";
+      const payloadForTextarea = hasRawObj ? safeRawObj : (fallbackPayload || {});
+      const prettyRaw = toPrettyJson(payloadForTextarea);
+
+      if (persistRaw && hasRawObj) {
+        localStorage.setItem(getStyleRawCacheKey(), JSON.stringify(safeRawObj));
+      }
+
+      resDiv.style.display = 'block';
+      resDiv.innerHTML = `
+        <div style="padding:16px; background:${boxBg}; border:1px solid ${boxBorder}; border-radius:8px; color:${boxColor}; margin-bottom:10px;">
+          ${headline || "🌟 스타일 JSON을 불러왔습니다."}
+          ${note ? `<br><small style="display:block; margin-top:6px; color:#475569;">${note}</small>` : ""}
+        </div>
+        <label style="display:block; font-weight:600; margin:8px 0;">style_guide raw JSON</label>
+        <textarea readonly style="width:100%; height:360px; font-family:monospace; font-size:12px; line-height:1.5;">${escapeHtml(prettyRaw)}</textarea>
+      `;
+
+      resDiv.style.background = 'transparent';
+      resDiv.style.border = 'none';
+      resDiv.style.padding = '0';
+    }
+
+    // Settings Load & Save
+    function loadSettings() {
+      localStorage.setItem('llmProvider', 'openai');
+      const om = localStorage.getItem('openaiModel') || 'gpt-5.2';
+      const urls = localStorage.getItem(getBlogUrlsCacheKey()) || localStorage.getItem('blogUrls') || '';
+      const omSelect = document.getElementById('settingOpenaiModel');
+      const omCustom = document.getElementById('settingOpenaiModelCustom');
+      if (omSelect) {
+        const hasOption = Array.from(omSelect.options || []).some((opt) => String(opt.value) === om);
+        if (hasOption) {
+          omSelect.value = om;
+          if (omCustom) omCustom.value = "";
+        } else {
+          if (omCustom) omCustom.value = om;
+        }
+      }
+      const urlsInput = document.getElementById('settingBlogUrls');
+      if (urlsInput) {
+        urlsInput.value = urls;
+        if (typeof renderStyleUrls === 'function') renderStyleUrls();
+      }
+
+      // Restore cached style JSON for quick inspection
+      const rawJsonStr = localStorage.getItem(getStyleRawCacheKey()) || (!appAuth.loggedIn ? localStorage.getItem('styleProfileRawJson') : "");
+      if (!appAuth.loggedIn && rawJsonStr && !appSetup.styleConfigured) {
+        try {
+          const rawObj = JSON.parse(rawJsonStr);
+          appSetup.styleRawJson = rawObj;
+          appSetup.styleConfigured = hasConfiguredStyle(rawObj);
+          renderStyleExtractionPanel({
+            headline: "🌟 기존 분석 내용 불러오기 성공 (비용 절약)",
+            rawObj,
+            fallbackPayload: rawObj,
+            note: "캐시 데이터입니다. 최신 상태는 스타일 추출을 다시 실행해 확인하세요.",
+          });
+          updateSetupGateUi();
+        } catch (e) { }
+      }
+    }
+
+    function getStyleUrlsArray() {
+      const val = document.getElementById('settingBlogUrls').value;
+      return val.split('\n').map(u => u.trim()).filter(Boolean);
+    }
+
+    function renderStyleUrls() {
+      const urls = getStyleUrlsArray();
+      const list = document.getElementById('styleUrlList');
+      if (!list) return;
+      list.innerHTML = '';
+      if (urls.length === 0) {
+        list.innerHTML = '<div style="color:var(--secondary-label); font-size:13px; text-align:center; padding:20px; border:1px dashed #cbd5e1; border-radius:8px; background:#f8fafc;">추가된 URL이 없습니다.<br>원하는 블로그 글 주소를 추가해주세요.</div>';
+        return;
+      }
+      urls.forEach((u, i) => {
+        list.innerHTML += `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; padding:10px 12px; border-radius:6px; font-size:13px;">
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; margin-right:10px; color:#475569;" title="${u}">${u}</span>
+            <button type="button" style="border:none; cursor:pointer; font-size:14px; color:#94a3b8; background:transparent;" onclick="removeStyleUrl(${i})" title="삭제">❌</button>
+          </div>
+        `;
+      });
+    }
+
+    function addStyleUrl() {
+      const input = document.getElementById('styleUrlInput');
+      const val = input.value.trim();
+      if (!val) return;
+      const urls = getStyleUrlsArray();
+      if (urls.length >= 10) return uiAlert('알림', '최대 10개까지만 등록 가능합니다.');
+      urls.push(val);
+      document.getElementById('settingBlogUrls').value = urls.join('\n');
+      input.value = '';
+      renderStyleUrls();
+    }
+
+    function removeStyleUrl(idx) {
+      const urls = getStyleUrlsArray();
+      urls.splice(idx, 1);
+      document.getElementById('settingBlogUrls').value = urls.join('\n');
+      renderStyleUrls();
+    }
+
+    function saveSettingsAndClose() {
+      const om = resolveOpenaiModelFromSettings();
+      const urls = document.getElementById('settingBlogUrls').value.trim();
+      localStorage.setItem('llmProvider', 'openai');
+      localStorage.setItem('openaiModel', om);
+      localStorage.removeItem('colabAddress');
+      localStorage.removeItem('geminiModel');
+      localStorage.setItem(getBlogUrlsCacheKey(), urls);
+      document.getElementById('settingsModal').classList.remove('active');
+      uiAlert('저장 완료', '설정이 저장되었습니다.');
+    }
+
+    function switchSettingsTab(e, tabId) {
+      document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.settings-pane').forEach(p => p.classList.remove('active'));
+      if (e) e.currentTarget.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    async function savePersonaSettings() {
+      if (!ensureLoggedIn()) return;
+      const persona = readPersonaFormValues();
+      try {
+        const res = await fetch('/api/persona', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ persona }),
+        });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.message || "페르소나 저장 실패");
+        appAuth.persona = normalizePersona(json.persona || persona);
+        appSetup.personaConfigured = hasConfiguredPersona(appAuth.persona);
+        setPersonaFormValues(appAuth.persona);
+        updateTokenBalanceFromPayload(json);
+        updateSetupGateUi();
+        uiAlert('저장 완료', '페르소나가 저장되었습니다. 최종 생성 프롬프트에 자동 반영됩니다.');
+      } catch (err) {
+        uiAlert('저장 실패', err.message || '알 수 없는 오류');
+      }
+    }
+
+    let styleRawResponses = [];
+
+    function normalizeStyleRawResponses(payload) {
+      if (Array.isArray(payload)) {
+        return payload
+          .map((item, idx) => ({
+            attempt: Number(item?.attempt || idx + 1),
+            provider: String(item?.provider || ""),
+            model: String(item?.model || ""),
+            raw_text: String(item?.raw_text || item?.rawText || ""),
+          }))
+          .filter((item) => item.raw_text);
+      }
+
+      if (typeof payload === "string" && payload.trim()) {
+        return [{ attempt: 1, provider: "", model: "", raw_text: payload.trim() }];
+      }
+
+      return [];
+    }
+
+    function setStyleRawAiResponses(payload) {
+      styleRawResponses = normalizeStyleRawResponses(payload);
+      const btn = document.getElementById("btnStyleRawResponse");
+      if (!btn) return;
+      btn.disabled = styleRawResponses.length === 0;
+    }
+
+    function showStyleRawAiResponses() {
+      if (!styleRawResponses.length) {
+        uiAlert("AI 응답", "표시할 스타일 추출 AI 응답이 없습니다.");
+        return;
+      }
+
+      const text = styleRawResponses
+        .map((item) => {
+          const header = `[Attempt ${item.attempt}] provider=${item.provider || "-"} | model=${item.model || "-"}`;
+          return `${header}\n${item.raw_text}`;
+        })
+        .join("\n\n====================\n\n");
+
+      uiAlert(
+        "🤖 스타일 추출 AI 원본 응답",
+        `<textarea style="width:100%; height:500px; font-family:monospace; font-size:12px; line-height:1.5;">${escapeHtml(text)}</textarea>`
+      );
+    }
+
+    async function runStyleExtraction(e) {
+      if (!ensureLoggedIn()) return;
+      const urls = document.getElementById('settingBlogUrls').value.trim();
+      if (!urls) return uiAlert('알림', '블로그 URL을 한 줄 이상의 엔터로 구분하여 입력해주세요.');
+
+      const btn = e ? e.currentTarget : document.querySelector('.settings-pane.active .btn');
+      const originalText = btn.innerText;
+      btn.innerText = '스타일 추출 및 분석 중...  (최대 1~2분 소요)';
+      btn.disabled = true;
+      setStyleRawAiResponses([]);
+
+      const p = 'openai';
+      const om = resolveOpenaiModelFromSettings();
+
+      try {
+        const formData = new URLSearchParams();
+        formData.append('blogUrls', urls);
+        formData.append('llmProvider', p);
+        formData.append('openaiModel', om);
+
+        const res = await fetch('/api/style-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: formData.toString()
+        });
+        const json = await res.json();
+        updateTokenBalanceFromPayload(json);
+        setStyleRawAiResponses(
+          json.llm_responses
+          || json.llm_response
+          || json.profile?.llmStyle?.llm_responses
+          || json.profile?.llmStyle?.llm_response
+          || json.profile?.llmStyleDebug?.llm_responses
+          || json.profile?.llmStyleDebug?.llm_response
+          || []
+        );
+
+        if (json.ok) {
+          const rawObj = json.profile?.llmStyle?.rawJson || json.llmStyle?.rawJson || {};
+          const styleError = json.profile?.llmStyleError || json.llmStyleError || "";
+          appSetup.styleRawJson = rawObj;
+          appSetup.styleConfigured = hasConfiguredStyle(rawObj);
+          renderStyleExtractionPanel({
+            headline: "🌟 분석 완료! AI가 문체 초안(JSON)을 만들었습니다.",
+            rawObj,
+            fallbackPayload: json,
+            note: styleError ? `참고: ${styleError}` : "",
+            persistRaw: true,
+          });
+          localStorage.setItem(getBlogUrlsCacheKey(), urls);
+          updateSetupGateUi();
+        } else {
+          appSetup.styleConfigured = false;
+          renderStyleExtractionPanel({
+            headline: "🚨 스타일 추출 실패",
+            tone: "error",
+            rawObj: {},
+            fallbackPayload: json,
+            note: json.message || "알 수 없는 오류",
+          });
+          updateSetupGateUi();
+        }
+      } catch (err) {
+        uiAlert('에러', '통신 중 에러가 발생했습니다: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }
+      }
+    }
+
+    let memes = JSON.parse(localStorage.getItem('savedMemes') || '[]');
+
+    function renderMemes() {
+      const g = document.getElementById('memeGrid');
+      g.innerHTML = '';
+      if (memes.length === 0) {
+        g.innerHTML = `<div style="grid-column: span 3; text-align:center; padding:30px; color:var(--secondary-label); font-size:13px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">Meme(밈) 이미지를 등록해보세요!</div>`;
+        return;
+      }
+      memes.forEach((url, i) => {
+        g.innerHTML += `
+          <div style="position:relative; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; aspect-ratio:1; background:#f8fafc;">
+            <img src="${url}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect fill=\\'%23f1f5f9\\' width=\\'100\\' height=\\'100\\'/><text fill=\\'%2394a3b8\\' font-family=\\'sans-serif\\' font-size=\\'12\\' cx=\\'50\\' cy=\\'50\\' text-anchor=\\'middle\\' dominant-baseline=\\'middle\\'>Failed to load</text></svg>'">
+            <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(255,255,255,0.9); display:flex;">
+               <button style="flex:1; border:none; padding:8px 0; font-size:12px; font-weight:600; cursor:pointer; color:var(--brand); background:transparent;" onclick="copyMemeUrl('${url}')">URL 복사</button>
+               <div style="width:1px; background:#e2e8f0;"></div>
+               <button style="width:40px; border:none; padding:8px 0; background:transparent; cursor:pointer;" onclick="deleteMeme(${i})" title="삭제">❌</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function addMeme() {
+      const val = document.getElementById('memeInput').value.trim();
+      if (!val) return;
+      memes.push(val);
+      localStorage.setItem('savedMemes', JSON.stringify(memes));
+      document.getElementById('memeInput').value = '';
+      renderMemes();
+    }
+
+    function deleteMeme(idx) {
+      if (confirm('이 이미지를 보관함에서 지울까요?')) {
+        memes.splice(idx, 1);
+        localStorage.setItem('savedMemes', JSON.stringify(memes));
+        renderMemes();
+      }
+    }
+
+    function copyMemeUrl(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        uiAlert('복사 완료', '이미지 URL이 클립보드에 복사되었습니다.<br>네이버 스마트에디터에 붙여넣기 해보세요!');
+      }).catch(err => {
+        uiAlert('복사 실패', '다시 시도해주세요.');
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await refreshAuthState();
+      loadSettings();
+      renderMemes();
+      applyStep1Preset(false);
+      refreshSavedDraftHint();
+
+      const step1 = document.getElementById('step1');
+      if (step1) {
+        step1.addEventListener('input', queueDraftAutosave);
+        step1.addEventListener('change', queueDraftAutosave);
+      }
+
+      ["finalTitleInput", "optNegative", "optHashtag", "optStyle"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', queueDraftAutosave);
+        el.addEventListener('change', queueDraftAutosave);
+      });
+    });
+
+    // --- Media Upload / ordering / metadata ---
+    let mediaItems = [];
+
+    function classifyMediaType(file) {
+      return String(file?.type || "").startsWith("video/") ? "video" : "image";
+    }
+
+    function escapeAttr(s) {
+      return String(s || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function renderMediaList() {
+      const mediaList = document.getElementById('mediaList');
+      mediaList.innerHTML = '';
+
+      if (!mediaItems.length) {
+        mediaList.innerHTML = '<div class="note">업로드된 미디어가 없습니다.</div>';
+        return;
+      }
+
+      let imageCounter = 0;
+      let videoCounter = 0;
+
+      mediaItems.forEach((item, index) => {
+        const typeLabel = item.type === 'video' ? '영상' : '사진';
+        if (item.type === 'video') videoCounter += 1;
+        else imageCounter += 1;
+        const slot = item.type === 'video' ? `VIDEO_${videoCounter}` : `PHOTO_${imageCounter}`;
+        const hasPreview = Boolean(item.previewUrl);
+        const restoredNote = item._restored ? '<div style="margin-top:6px; font-size:11px; color:#64748b;">복원 데이터(파일 재업로드 없이 메타만 복원)</div>' : '';
+
+        const preview = item.type === 'video'
+          ? (hasPreview
+            ? `<video src="${item.previewUrl}" controls style="width:100%; height:100px; object-fit:cover;"></video>`
+            : `<div style="height:100px; border:1px dashed #cbd5e1; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#f8fafc; color:#64748b; font-size:12px;">영상 미리보기 없음</div>`)
+          : (hasPreview
+            ? `<img src="${item.previewUrl}" alt="media-${index}" />`
+            : `<div style="height:100px; border:1px dashed #cbd5e1; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#f8fafc; color:#64748b; font-size:12px;">사진 미리보기 없음</div>`);
+
+        const card = document.createElement('div');
+        card.className = 'media-item';
+        card.dataset.id = item.id;
+        card.innerHTML = `
+          <button type="button" class="delete-btn" data-action="delete" title="삭제">&times;</button>
+          ${preview}
+          <div class="media-item-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong style="font-size:15px; font-weight:600;">${index + 1}. ${typeLabel}</strong>
+              <div style="display:flex; gap:4px;">
+                <button type="button" class="btn-outline" style="padding:4px 8px; font-size:11px; min-width:0; border-radius:6px; background:var(--tertiary-bg); border-color:var(--tertiary-bg); color:var(--label);" data-action="up">▲</button>
+                <button type="button" class="btn-outline" style="padding:4px 8px; font-size:11px; min-width:0; border-radius:6px; background:var(--tertiary-bg); border-color:var(--tertiary-bg); color:var(--label);" data-action="down">▼</button>
+              </div>
+            </div>
+            <div class="media-meta">
+              slot: <code>${slot}</code>
+              ${item.fileName ? `<br>파일: ${escapeAttr(item.fileName)}` : ""}
+              ${restoredNote}
+            </div>
+
+            <label style="display:block; margin-top:12px;">
+              한 줄 설명 <span style="color:var(--red); font-weight:600;">(필수)</span>
+              <input type="text" name="media.${index}.description" required maxlength="80"
+                value="${escapeAttr(item.meta?.description || "")}"
+                placeholder="예: 외관 / 곱창전골 보글보글"
+                oninput="mediaItems[${index}].meta.description=this.value;queueDraftAutosave()"
+                style="margin-top:4px;">
+            </label>
+
+            <label style="display:block; margin-top:12px;">
+              포인트 (선택, 콤마)
+              <input type="text" name="media.${index}.highlights" maxlength="80"
+                value="${escapeAttr(item.meta?.highlights || "")}"
+                placeholder="예: 간판, 화분, 푸짐함"
+                oninput="mediaItems[${index}].meta.highlights=this.value;queueDraftAutosave()"
+                style="margin-top:4px;">
+            </label>
+
+            <label style="display:block; margin-top:12px;">
+              톤/감정 (선택)
+              <select name="media.${index}.mood" onchange="mediaItems[${index}].meta.mood=this.value;queueDraftAutosave()"
+                style="margin-top:4px;">
+                <option value="" ${item.meta?.mood ? "" : "selected"}>선택</option>
+                <option value="excited" ${item.meta?.mood === "excited" ? "selected" : ""}>설렘</option>
+                <option value="wow" ${item.meta?.mood === "wow" ? "selected" : ""}>감탄</option>
+                <option value="cozy" ${item.meta?.mood === "cozy" ? "selected" : ""}>포근</option>
+                <option value="hungry" ${item.meta?.mood === "hungry" ? "selected" : ""}>군침</option>
+                <option value="funny" ${item.meta?.mood === "funny" ? "selected" : ""}>웃김</option>
+              </select>
+            </label>
+
+            <input type="hidden" name="media.${index}.type" value="${item.type}">
+          </div>
+        `;
+
+        card.addEventListener('click', (e) => {
+          const btn = e.target.closest('button');
+          if (!btn) return;
+          const action = btn.dataset.action;
+          if (action === 'delete') {
+            mediaItems.splice(index, 1);
+            renderMediaList();
+            queueDraftAutosave();
+          }
+          if (action === 'up' && index > 0) {
+            [mediaItems[index - 1], mediaItems[index]] = [mediaItems[index], mediaItems[index - 1]];
+            renderMediaList();
+            queueDraftAutosave();
+          }
+          if (action === 'down' && index < mediaItems.length - 1) {
+            [mediaItems[index + 1], mediaItems[index]] = [mediaItems[index], mediaItems[index + 1]];
+            renderMediaList();
+            queueDraftAutosave();
+          }
+        });
+
+        mediaList.appendChild(card);
+      });
+    }
+
+    function handleMediaUpload(e) {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      files.forEach((file) => {
+        mediaItems.push({
+          id: safeUuid(),
+          file,
+          fileName: String(file?.name || ""),
+          type: classifyMediaType(file),
+          previewUrl: URL.createObjectURL(file),
+          meta: { description: "", highlights: "", mood: "" },
+        });
+      });
+      renderMediaList();
+      queueDraftAutosave();
+      e.target.value = "";
+    }
+
+    function buildStructuredInfoFromStep1() {
+      const selectedStructured = collectStructuredValuesFromSelectedBlocks();
+      const oneLineSummary = getValue("structured.visit_context.one_line_summary");
+      if (oneLineSummary) {
+        selectedStructured["structured.visit_context.one_line_summary"] = oneLineSummary;
+      }
+
+      const structuredInfo = {};
+      Object.entries(selectedStructured).forEach(([key, value]) => {
+        const path = key.replace(/^structured\./, "");
+        setNested(structuredInfo, path, value);
+      });
+
+      if (structuredInfo?.menu_info) {
+        structuredInfo.menu_info.other_menu = splitCsv(structuredInfo.menu_info.other_menu);
+        structuredInfo.menu_info.taste_points = splitCsv(structuredInfo.menu_info.taste_points);
+      }
+      if (structuredInfo?.general_info?.key_points) {
+        structuredInfo.general_info.key_points = splitCsv(structuredInfo.general_info.key_points);
+      }
+      if (structuredInfo?.general_info?.cost_impression && !structuredInfo?.menu_info?.price_impression) {
+        if (!structuredInfo.menu_info || typeof structuredInfo.menu_info !== "object") {
+          structuredInfo.menu_info = {};
+        }
+        structuredInfo.menu_info.price_impression = String(structuredInfo.general_info.cost_impression || "").trim();
+      }
+
+      const additionalLines = [];
+
+      if (selectedStep1Blocks.has("summary_core")) {
+        const keyPoints = Array.isArray(structuredInfo?.general_info?.key_points)
+          ? structuredInfo.general_info.key_points.join(", ")
+          : structuredInfo?.general_info?.key_points;
+        additionalLines.push(formatCsvLine("핵심 포인트", keyPoints));
+      }
+
+      if (selectedStep1Blocks.has("audience_goal")) {
+        additionalLines.push(formatLine("대상 독자", structuredInfo?.general_info?.target_reader));
+        additionalLines.push(formatLine("기대 효과", structuredInfo?.general_info?.expected_outcome));
+      }
+
+      if (selectedStep1Blocks.has("cost_time")) {
+        additionalLines.push(formatLine("가격/비용 체감", structuredInfo?.general_info?.cost_impression));
+        additionalLines.push(formatLine("시간/대기 체감", structuredInfo?.general_info?.time_impression));
+      }
+
+      if (selectedStep1Blocks.has("pros_cons")) {
+        additionalLines.push(formatLine("좋았던 점", structuredInfo?.general_info?.pros));
+        additionalLines.push(formatLine("아쉬운 점", structuredInfo?.general_info?.cons));
+      }
+
+      if (selectedStep1Blocks.has("tips_caution")) {
+        additionalLines.push(formatLine("팁", structuredInfo?.general_info?.tip));
+        additionalLines.push(formatLine("주의사항", structuredInfo?.general_info?.caution));
+      }
+
+      if (selectedStep1Blocks.has("hospital")) {
+        additionalLines.push(formatLine("진료과/기관", structuredInfo?.hospital_info?.department));
+        additionalLines.push(formatLine("방문 사유", structuredInfo?.hospital_info?.reason));
+        additionalLines.push(formatLine("진료 과정", structuredInfo?.hospital_info?.process));
+        additionalLines.push(formatLine("처방/경과", structuredInfo?.hospital_info?.followup));
+      }
+
+      if (selectedStep1Blocks.has("parenting")) {
+        additionalLines.push(formatLine("아이 월령/연령", structuredInfo?.parenting_info?.child_stage));
+        additionalLines.push(formatLine("상황/활동", structuredInfo?.parenting_info?.situation));
+        additionalLines.push(formatLine("아이 반응", structuredInfo?.parenting_info?.reaction));
+        additionalLines.push(formatLine("부모 팁", structuredInfo?.parenting_info?.tip));
+      }
+
+      if (selectedStep1Blocks.has("food")) {
+        additionalLines.push(formatCsvLine("기타 메뉴", structuredInfo?.menu_info?.other_menu?.join(", ")));
+        additionalLines.push(formatCsvLine("맛 포인트", structuredInfo?.menu_info?.taste_points?.join(", ")));
+      }
+      const summarizedNotes = additionalLines.filter(Boolean).join("\n");
+      const userExtraNotes = String(structuredInfo?.extra_notes || "").trim();
+      const mergedExtraNotes = [userExtraNotes, summarizedNotes].filter(Boolean).join("\n");
+      if (mergedExtraNotes) structuredInfo.extra_notes = mergedExtraNotes;
+      else delete structuredInfo.extra_notes;
+
+      const pruned = pruneStructuredValue(structuredInfo);
+      if (pruned && typeof pruned === "object") return pruned;
+      return {};
+    }
+
+    function buildMediaMetaFromStep2() {
+      let photoCount = 0;
+      let videoCount = 0;
+      return mediaItems.map((m) => {
+        const type = m.type === "video" ? "video" : "image";
+        if (type === "image") photoCount += 1;
+        else videoCount += 1;
+        const slot = type === "image" ? `PHOTO_${photoCount}` : `VIDEO_${videoCount}`;
+        return {
+          slot,
+          type,
+          description: String(m.meta?.description || "").trim(),
+          highlights: splitCsv(m.meta?.highlights || ""),
+          mood: String(m.meta?.mood || "").trim(),
+          url: "",
+        };
+      });
+    }
+
+    function goToStep2FromStep1() {
+      const step1Error = document.getElementById("step1Error");
+      const summary = getValue("structured.visit_context.one_line_summary");
+      if (!summary) {
+        step1Error.style.display = "block";
+        step1Error.innerText = "한 줄 요약(one_line_summary)은 필수입니다.";
+        uiAlert("입력 확인", "Step1의 한 줄 요약을 입력해주세요.");
+        return;
+      }
+      step1Error.style.display = "none";
+      saveStepDraft(false);
+      goToStep(2);
+    }
+
+    function preparePayloadAndGoStep4() {
+      const step2Error = document.getElementById("step2Error");
+      const summary = getValue("structured.visit_context.one_line_summary");
+      if (!summary) {
+        goToStep(1);
+        uiAlert("입력 확인", "Step1의 한 줄 요약을 먼저 입력해주세요.");
+        return;
+      }
+
+      if (mediaItems.length > 0) {
+        const invalidIndex = mediaItems.findIndex((m) => !String(m.meta?.description || "").trim());
+        if (invalidIndex >= 0) {
+          step2Error.style.display = "block";
+          step2Error.innerText = `미디어 ${invalidIndex + 1}번의 한 줄 설명(description)을 입력해주세요.`;
+          uiAlert("입력 확인", `미디어 ${invalidIndex + 1}번의 한 줄 설명이 비어 있습니다.`);
+          return;
+        }
+      }
+      step2Error.style.display = "none";
+
+      const structuredInfo = buildStructuredInfoFromStep1();
+      const mediaMeta = buildMediaMetaFromStep2();
+      const payload = { structuredInfo, mediaMeta };
+      appState.structuredInfo = structuredInfo;
+      appState.mediaMeta = mediaMeta;
+      appState.payload = payload;
+      saveStepDraft(false);
+
+      const titleInput = document.getElementById('finalTitleInput');
+      if (titleInput && !titleInput.value.trim()) {
+        titleInput.value = structuredInfo?.visit_context?.one_line_summary || "";
+      }
+
+      console.log("[MVP payload preview]", payload);
+      goToStep(4);
+    }
+
+    // --- Search Golden Keywords (Modal & Cached) ---
+    let goldenCache = {}; // { "keyword_page": data }
+    let currentGoldenKeyword = "";
+    let currentGoldenPage = 1;
+
+    function openGoldenModal() {
+      document.getElementById('goldenModal').classList.add('active');
+    }
+
+    function selectKeyword(kw) {
+      const input = document.getElementById('targetKeywords');
+      let currentVal = input.value.trim();
+
+      if (!currentVal) {
+        input.value = kw;
+      } else {
+        const parts = currentVal.split(',').map(s => s.trim()).filter(Boolean);
+        if (!parts.includes(kw)) {
+          if (parts.length >= 3) parts.pop(); // Keep max 3
+          parts.push(kw);
+          input.value = parts.join(', ');
+        }
+      }
+      queueDraftAutosave();
+      document.getElementById('goldenModal').classList.remove('active');
+    }
+
+    function renderGoldenBadge(ratio) {
+      if (ratio < 1) return '<span class="badge badge-honey">최상</span>';
+      if (ratio < 5) return '<span class="badge badge-good">양호</span>';
+      if (ratio < 20) return '<span class="badge" style="background:#f3f4f6; color:#4b5563;">보통</span>';
+      return '<span class="badge badge-saturated">포화</span>';
+    }
+
+    function uiAlert(title, messageHTML, e = null) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+
+      let overlay = document.getElementById('customUiAlertOverlay');
+      if (overlay) return;
+
+      overlay = document.createElement('div');
+      overlay.id = 'customUiAlertOverlay';
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100vw';
+      overlay.style.height = '100vh';
+      overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      overlay.style.zIndex = '999999';
+      overlay.style.display = 'flex';
+      overlay.style.justifyContent = 'center';
+      overlay.style.alignItems = 'center';
+
+      overlay.innerHTML = `
+        <div style="background:white; padding:24px; border-radius:12px; max-width:400px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.2); text-align:left; word-break: break-word;" onclick="event.stopPropagation()">
+          <h3 style="margin:0 0 12px 0; font-size:16px; color:#111827; display:flex; align-items:center; gap:6px;">${title}</h3>
+          <p style="margin:0 0 16px 0; font-size:14px; color:#4b5563; line-height:1.5;">${messageHTML}</p>
+          <button style="width:100%; border:none; background:var(--brand); color:white; padding:10px; border-radius:6px; font-weight:600; cursor:pointer;" onclick="document.getElementById('customUiAlertOverlay').remove()">확인</button>
+        </div>
+      `;
+
+      overlay.onclick = () => overlay.remove();
+      document.body.appendChild(overlay);
+    }
+
+    function showTooltipAlert(e) {
+      uiAlert(
+        "경쟁도 란?",
+        "광고주들의 입찰 경쟁 수준을 의미합니다.<br><br>경쟁이 <strong>'높음'</strong>일수록 파워블로거가 아닌 일반 블로거가 검색 상위에 노출되기 어려울 수 있습니다.",
+        e
+      );
+    }
+
+    async function searchGolden(page = 1) {
+      const kwInput = document.getElementById('goldenSearchInput').value.trim();
+      if (!kwInput) return;
+
+      currentGoldenKeyword = kwInput;
+      currentGoldenPage = page;
+      const cacheKey = kwInput + "_" + page;
+
+      const resultList = document.getElementById('goldenResultList');
+      const pagination = document.getElementById('goldenPagination');
+
+      resultList.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--secondary-label);">분석중... (최대 30초 소요될 수 있습니다)</div>';
+      pagination.style.display = 'none';
+
+      let data = goldenCache[cacheKey];
+
+      if (!data) {
+        try {
+          const res = await fetch(`/api/naver-golden-keyword?keyword=${encodeURIComponent(kwInput)}&page=${page}`);
+          const json = await res.json();
+          if (!json.ok) throw new Error(json.message);
+          data = json;
+          goldenCache[cacheKey] = data; // Cache
+        } catch (err) {
+          const errMsg = typeof err.message === 'string' ? err.message : JSON.stringify(err.message);
+          resultList.innerHTML = `<div style="text-align:center; padding: 40px; color:#991b1b;">통신 실패: ${errMsg}</div>`;
+          uiAlert("분석 오류", `키워드 분석 중 오류가 발생했습니다.<br><br><span style="color:#ef4444">${errMsg}</span>`);
+          return;
+        }
+      }
+
+      // Render Exact Match if exists (usually page 1 only is enough, but we can show it)
+      let exactHtml = '';
+      if (data.exactData) {
+        const e = data.exactData;
+        exactHtml = `
+        <div class="golden-exact-box" style="display:flex; align-items:center; gap:12px; padding:12px 15px; margin:0 0 10px 0; cursor:pointer;" onclick="selectKeyword('${e.keyword}')">
+          <div class="golden-item-title" style="flex:1; margin:0; font-size:15px; color:var(--brand);">${e.keyword}</div>
+          <div class="golden-item-stats" style="gap:12px;">
+            <span class="golden-stat">모바일 ${e.mobile.toLocaleString()}</span>
+            <span class="golden-stat">PC ${e.pc.toLocaleString()}</span>
+            <span class="golden-stat" title="광고주 입찰 경쟁 수준. 높을수록 노출이 어려울 수 있습니다.">경쟁 ${e.comp} <span style="font-size:11px; cursor:help; margin-left:2px;" onclick="showTooltipAlert(event)">?</span></span>
+          </div>
+        </div>
+        `;
+      }
+
+      // Render List
+      if (!data.dataList || data.dataList.length === 0) {
+        resultList.innerHTML = exactHtml + '<div style="text-align:center; padding: 40px; color:var(--secondary-label);">연관 키워드가 없습니다.</div>';
+        return;
+      }
+
+      let html = exactHtml;
+      data.dataList.forEach(item => {
+        html += `
+          <div class="golden-item" onclick="selectKeyword('${item.keyword}')">
+            <div class="golden-item-header">
+              <span class="golden-item-title">${item.keyword}</span>
+              ${renderGoldenBadge(item.ratio)}
+            </div>
+            <div class="golden-item-stats" style="justify-content:space-between;">
+              <div style="display:flex; gap:12px;">
+                <span class="golden-stat" title="최근 한 달간의 모바일+PC 총 검색량">검색량 ${item.volume.toLocaleString()}</span>
+                <span class="golden-stat" title="누적 발행된 블로그 문서 수">블로그 수 ${item.docCount.toLocaleString()}</span>
+              </div>
+              <div title="[문서 수 ÷ 한 달 검색량]. 1배 이하일수록 경쟁이 치열하지 않아 노출 확률이 높습니다.">포화도: ${item.ratio === 999 ? '측정불가' : item.ratio.toFixed(2) + '배'}</div>
+            </div>
+          </div>
+        `;
+      });
+      resultList.innerHTML = html;
+
+      // Render Pagination
+      const totalPage = data.totalPage || 1;
+      let pageHtml = `<button class="golden-page-btn" ${page === 1 ? 'disabled' : ''} onclick="searchGolden(${page - 1})">이전</button>`;
+
+      const maxPagesToShow = 5;
+      let startPage = Math.max(1, page - 2);
+      let endPage = Math.min(totalPage, startPage + maxPagesToShow - 1);
+      if (endPage - startPage < maxPagesToShow - 1) {
+        startPage = Math.max(1, endPage - maxPagesToShow + 1);
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        pageHtml += `<button class="golden-page-btn ${i === page ? 'active' : ''}" onclick="searchGolden(${i})">${i}</button>`;
+      }
+      pageHtml += `<button class="golden-page-btn" ${page === totalPage ? 'disabled' : ''} onclick="searchGolden(${page + 1})">다음</button>`;
+
+      pagination.innerHTML = pageHtml;
+      pagination.style.display = 'flex';
+      resultList.scrollTop = 0;
+    }
+
+    // --- Generation APIs ---
+    let step4Prompt = null;
+    let step4RawResponses = [];
+
+    function normalizeRawResponses(payload) {
+      if (Array.isArray(payload)) {
+        return payload
+          .map((item, idx) => ({
+            attempt: Number(item?.attempt || idx + 1),
+            provider: String(item?.provider || ""),
+            model: String(item?.model || ""),
+            raw_text: String(item?.raw_text || item?.rawText || ""),
+          }))
+          .filter((item) => item.raw_text);
+      }
+
+      if (typeof payload === "string" && payload.trim()) {
+        return [{ attempt: 1, provider: "", model: "", raw_text: payload.trim() }];
+      }
+
+      return [];
+    }
+
+    function setRawAiResponses(payload) {
+      step4RawResponses = normalizeRawResponses(payload);
+      const btn = document.getElementById("btnRawResponseStep4");
+      if (!btn) return;
+      btn.disabled = step4RawResponses.length === 0;
+    }
+
+    function showRawAiResponses() {
+      if (!step4RawResponses.length) {
+        uiAlert("AI 응답", "표시할 AI 응답이 없습니다. 먼저 최종 생성을 실행해주세요.");
+        return;
+      }
+
+      const text = step4RawResponses
+        .map((item) => {
+          const header = `[Attempt ${item.attempt}] provider=${item.provider || "-"} | model=${item.model || "-"}`;
+          return `${header}\n${item.raw_text}`;
+        })
+        .join("\n\n====================\n\n");
+
+      uiAlert(
+        "AI 원본 응답",
+        `<textarea style="width:100%; height:500px; font-family:monospace; font-size:12px; line-height:1.5;">${escapeHtml(text)}</textarea>`
+      );
+    }
+
+    function normalizeTitleSuggestions(list) {
+      if (!Array.isArray(list)) return [];
+      return [...new Set(
+        list
+          .map((x) => String(x || "").replace(/\s+/g, " ").trim())
+          .filter(Boolean)
+      )].slice(0, 7);
+    }
+
+    function applySuggestedTitle(title) {
+      const text = String(title || "").trim();
+      if (!text) return;
+      const input = document.getElementById('finalTitleInput');
+      if (!input) return;
+      input.value = text;
+      queueDraftAutosave();
+      uiAlert("제목 적용", `추천 제목을 적용했습니다.<br><br>${escapeHtml(text)}`);
+    }
+
+    function renderTitleSuggestions(list) {
+      const wrap = document.getElementById('titleSuggestionsWrap');
+      const box = document.getElementById('titleSuggestions');
+      if (!wrap || !box) return;
+
+      const titles = normalizeTitleSuggestions(list);
+      if (!titles.length) {
+        wrap.style.display = 'none';
+        box.innerHTML = '';
+        return;
+      }
+
+      wrap.style.display = 'block';
+      box.innerHTML = titles
+        .map((title) => {
+          const safe = escapeHtml(title);
+          const encoded = encodeURIComponent(title);
+          return `<button type="button" class="chip-btn" style="max-width:100%; text-align:left;" onclick="applySuggestedTitle(decodeURIComponent('${encoded}'))" title="${safe}">${safe}</button>`;
+        })
+        .join('');
+    }
+
+    function copyForNaver() {
+      const htmlContent = window.__lastNaverHtml || document.getElementById('naverPreview').innerHTML;
+      const listener = function (ev) {
+        ev.preventDefault();
+        ev.clipboardData.setData('text/html', htmlContent);
+        ev.clipboardData.setData('text/plain', document.getElementById('naverPreview').innerText);
+      };
+      document.addEventListener('copy', listener);
+      document.execCommand('copy');
+      document.removeEventListener('copy', listener);
+      uiAlert("복사 완료", "네이버 블로그용(서식 포함 HTML) 복사가 완료되었습니다!<br>네이버 블로그 스마트에디터에 그대로 [붙여넣기] 하세요.");
+    }
+
+    function buildFinalRequest(isPreview = false) {
+      const blogType = getValue("post_type") || "info";
+      const keywords = normalizeKeywordsRaw(getValue("keywords"));
+      const summary = getValue("structured.visit_context.one_line_summary");
+      const finalTitleInput = document.getElementById("finalTitleInput");
+      const finalTitle = (finalTitleInput?.value || "").trim() || summary || "블로그 포스트";
+
+      const optNegative = document.getElementById('optNegative').checked;
+      const optHashtag = document.getElementById('optHashtag').checked;
+      const optStyle = document.getElementById('optStyle').checked;
+
+      const llmProvider = 'openai';
+      const geminiModel = '';
+      const openaiModel = localStorage.getItem('openaiModel') || 'gpt-5.2';
+      const colabAddress = '';
+
+      if (!appState.payload) {
+        const structuredInfo = buildStructuredInfoFromStep1();
+        const mediaMeta = buildMediaMetaFromStep2();
+        appState.payload = { structuredInfo, mediaMeta };
+        appState.structuredInfo = structuredInfo;
+        appState.mediaMeta = mediaMeta;
+      }
+
+      return {
+        blogType,
+        keywords,
+        title: finalTitle,
+        structuredInfo: appState.payload.structuredInfo,
+        imagesMeta: appState.payload.mediaMeta,
+        mediaMeta: appState.payload.mediaMeta,
+        persona: readPersonaFormValues(),
+        options: { optNegative, optHashtag, optStyle },
+        llmProvider,
+        geminiModel,
+        openaiModel,
+        colabAddress,
+        isPreview,
+      };
+    }
+
+    async function previewFinalPrompt() {
+      if (!ensureWorkflowReady()) return;
+      try {
+        const btn = document.querySelector('button[onclick="previewFinalPrompt()"]');
+        if (btn) {
+          btn.dataset.origText = btn.innerText;
+          btn.innerText = "가져오는 중...";
+          btn.disabled = true;
+        }
+
+        const req = buildFinalRequest(true);
+        const res = await fetch('/api/generate-final-mvp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(req)
+        });
+        const json = await res.json();
+        updateTokenBalanceFromPayload(json);
+
+        if (btn) {
+          btn.innerText = btn.dataset.origText || "프롬프트 보기";
+          btn.disabled = false;
+        }
+        if (!json.ok) throw new Error(json.message);
+
+        const content = `[시스템 프롬프트 (System)]\n${json.prompt.system}\n\n=====================\n\n[사용자 프롬프트 (User)]\n${json.prompt.user}`;
+        uiAlert("🔍 최종 원고 프롬프트 미리보기", `<textarea style="width:100%; height:500px; font-family:monospace; font-size:12px; line-height:1.5;">${escapeHtml(content)}</textarea>`);
+      } catch (e) {
+        uiAlert('에러', '프롬프트를 가져오는데 실패했습니다: ' + e.message);
+      }
+    }
+
+    async function startFinalGeneration() {
+      if (!ensureWorkflowReady()) return;
+      document.getElementById('step4Actions').style.display = 'none';
+      document.getElementById('step4Loader').style.display = 'block';
+      document.getElementById('step4Result').style.display = 'none';
+      document.getElementById('step4Loader').className = 'status-box info';
+      document.getElementById('step4Loader').innerText = 'Step1/2 구조화 입력을 바탕으로 최종 원고를 생성하고 있습니다. (약 30~60초 소요) ';
+      setRawAiResponses([]);
+      renderTitleSuggestions([]);
+      saveStepDraft(false);
+
+      try {
+        const payload = buildFinalRequest(false);
+        const finalTitle = payload.title;
+        console.log("[final request payload]", payload);
+
+        const res = await fetch('/api/generate-final-mvp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        updateTokenBalanceFromPayload(json);
+        setRawAiResponses(json.llm_responses || json.llm_response || "");
+        if (!json.ok) throw new Error(json.message);
+
+        step4Prompt = json.prompt;
+        renderTitleSuggestions(json.title_suggestions || []);
+        const mdText = "# " + finalTitle + "\n\n" + json.markdown;
+        const naverRes = markdownToNaver(mdText);
+        window.__lastNaverHtml = naverRes.html;
+        renderNaverPreview(document.getElementById('naverPreview'), naverRes.html);
+        document.getElementById('finalMarkdown').value = `# ${finalTitle}\n\n${json.markdown}`;
+        document.getElementById('finalHashtags').innerText = (json.hashtags || []).join(' ');
+
+        document.getElementById('step4Loader').style.display = 'none';
+        document.getElementById('step4Result').style.display = 'block';
+      } catch (err) {
+        const errMsg = typeof err.message === 'string' ? err.message : JSON.stringify(err.message);
+        document.getElementById('step4Loader').innerHTML = '오류: ' + errMsg;
+        document.getElementById('step4Loader').className = 'status-box error';
+        uiAlert("최종 생성 오류", `원고를 생성하는 중 오류가 발생했습니다.<br><br><span style="color:#ef4444">${errMsg}</span>`);
+      }
+    }
+  </script>
+</body>
+
+</html>
