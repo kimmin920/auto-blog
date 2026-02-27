@@ -4,7 +4,7 @@ import http from "node:http";
 import https from "node:https";
 import { URL } from "node:url";
 import { createHash, randomUUID, createHmac } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import Busboy from "busboy";
@@ -2058,14 +2058,34 @@ await initStore();
 
 const sslKeyPath = String(process.env.SSL_KEY_PATH || "").trim();
 const sslCertPath = String(process.env.SSL_CERT_PATH || "").trim();
+const hasSslConfig = Boolean(sslKeyPath && sslCertPath);
+const canUseSsl =
+  hasSslConfig &&
+  existsSync(sslKeyPath) &&
+  existsSync(sslCertPath);
 
-if (sslKeyPath && sslCertPath) {
-  const key = readFileSync(sslKeyPath, "utf8");
-  const cert = readFileSync(sslCertPath, "utf8");
-  const httpsServer = https.createServer({ key, cert }, requestHandler);
-  httpsServer.listen(PORT, HOST, () => {
-    console.log(`Blog Auto MVP listening on https://${HOST}:${PORT}`);
-  });
+if (hasSslConfig && !canUseSsl) {
+  console.warn(
+    `[startup] SSL_KEY_PATH/SSL_CERT_PATH are set but files are missing. Falling back to HTTP. key=${sslKeyPath} cert=${sslCertPath}`
+  );
+}
+
+if (canUseSsl) {
+  try {
+    const key = readFileSync(sslKeyPath, "utf8");
+    const cert = readFileSync(sslCertPath, "utf8");
+    const httpsServer = https.createServer({ key, cert }, requestHandler);
+    httpsServer.listen(PORT, HOST, () => {
+      console.log(`Blog Auto MVP listening on https://${HOST}:${PORT}`);
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error || "unknown");
+    console.warn(`[startup] Failed to start HTTPS server (${message}). Falling back to HTTP.`);
+    const httpServer = http.createServer(requestHandler);
+    httpServer.listen(PORT, HOST, () => {
+      console.log(`Blog Auto MVP listening on http://${HOST}:${PORT}`);
+    });
+  }
 } else {
   const httpServer = http.createServer(requestHandler);
   httpServer.listen(PORT, HOST, () => {
