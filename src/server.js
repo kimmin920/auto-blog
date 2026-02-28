@@ -27,6 +27,10 @@ import {
   getUserTokenBalance,
   initStore,
   listGenerationRecords,
+  adminDeleteTableRow,
+  adminGetTableRows,
+  adminListTables,
+  adminReplaceTableRow,
   saveGenerationRecord,
   saveBlogSources,
   saveDraft,
@@ -67,6 +71,9 @@ const googleAuthStates = new Map();
 const DEFAULT_LLM_PROVIDER = String(process.env.LLM_PROVIDER || "openai").trim().toLowerCase();
 const UPLOAD_DIR = path.resolve(process.cwd(), String(process.env.UPLOAD_DIR || "data/uploads"));
 const SESSION_COOKIE_NAME = "ba_session";
+const ADMIN_COOKIE_NAME = "ba_admin";
+const ADMIN_SESSION_TTL_SECONDS = 60 * 60 * 12;
+const ADMIN_SESSION_TTL_MS = ADMIN_SESSION_TTL_SECONDS * 1000;
 const INITIAL_SIGNUP_TOKENS = Math.max(0, Number.parseInt(String(process.env.INITIAL_SIGNUP_TOKENS || "100"), 10) || 100);
 const TOKEN_COSTS = {
   style_profile: 15,
@@ -85,6 +92,7 @@ const DEFAULT_PERSONA = {
   goal: "",
   tone_note: "",
 };
+const adminSessions = new Map();
 
 function inferExtFromMime(mimeType) {
   const map = {
@@ -307,6 +315,74 @@ function setSessionCookie(res, sessionId, req) {
 function clearSessionCookie(res, req) {
   const secure = isSecureRequest(req);
   res.setHeader("Set-Cookie", buildCookieHeader(SESSION_COOKIE_NAME, "", { maxAge: 0, secure, sameSite: "Lax" }));
+}
+
+function getAdminPanelKey() {
+  return String(process.env.ADMIN_PANEL_KEY || process.env.ADMIN_KEY || "").trim();
+}
+
+function isAdminPanelEnabled() {
+  return Boolean(getAdminPanelKey());
+}
+
+function pruneAdminSessions() {
+  const now = Date.now();
+  for (const [token, expiresAt] of adminSessions.entries()) {
+    if (!Number.isFinite(expiresAt) || expiresAt <= now) {
+      adminSessions.delete(token);
+    }
+  }
+}
+
+function readAdminSessionToken(req) {
+  const cookies = parseCookies(req);
+  return String(cookies?.[ADMIN_COOKIE_NAME] || "").trim();
+}
+
+function hasAdminSession(req) {
+  pruneAdminSessions();
+  const token = readAdminSessionToken(req);
+  if (!token) return false;
+  const expiresAt = Number(adminSessions.get(token) || 0);
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+    adminSessions.delete(token);
+    return false;
+  }
+  return true;
+}
+
+function createAdminSession() {
+  pruneAdminSessions();
+  const token = randomUUID().replace(/-/g, "");
+  adminSessions.set(token, Date.now() + ADMIN_SESSION_TTL_MS);
+  return token;
+}
+
+function setAdminCookie(res, token, req) {
+  const secure = isSecureRequest(req);
+  res.setHeader(
+    "Set-Cookie",
+    buildCookieHeader(ADMIN_COOKIE_NAME, token, {
+      maxAge: ADMIN_SESSION_TTL_SECONDS,
+      secure,
+      sameSite: "Lax",
+    })
+  );
+}
+
+function clearAdminCookie(res, req) {
+  const secure = isSecureRequest(req);
+  res.setHeader("Set-Cookie", buildCookieHeader(ADMIN_COOKIE_NAME, "", { maxAge: 0, secure, sameSite: "Lax" }));
+}
+
+async function requireAdminApi(res, req) {
+  if (!isAdminPanelEnabled()) {
+    sendJson(res, 503, { ok: false, message: "관리자 기능이 비활성화되어 있습니다. ADMIN_PANEL_KEY를 설정하세요." });
+    return false;
+  }
+  if (hasAdminSession(req)) return true;
+  sendJson(res, 401, { ok: false, message: "관리자 인증이 필요합니다." });
+  return false;
 }
 
 function normalizeEmail(email) {
@@ -702,6 +778,240 @@ function consumeThreadsState(state) {
   const ttlMs = 10 * 60 * 1000;
   if (Date.now() - record.createdAt > ttlMs) return null;
   return record;
+}
+
+function renderAdminLoginHtml({ enabled, message = "" } = {}) {
+  const safeMessage = escapeHtml(message || "");
+  return `<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>관리자 로그인</title>
+  <style>
+    body{font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#f8fafc;margin:0;padding:24px;color:#0f172a}
+    .box{max-width:520px;margin:40px auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px}
+    label{display:block;font-size:13px;color:#334155;margin:8px 0}
+    input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}
+    button{margin-top:12px;padding:10px 14px;border:none;border-radius:8px;background:#0f172a;color:#fff;cursor:pointer}
+    .msg{margin-top:10px;font-size:13px;color:#b91c1c}
+    .hint{margin-top:10px;font-size:12px;color:#64748b}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1 style="margin:0 0 10px 0;">관리자 DB 콘솔</h1>
+    ${enabled
+      ? `<form method="POST" action="/admin/login">
+           <label>관리자 키</label>
+           <input type="password" name="adminKey" autocomplete="current-password" />
+           <button type="submit">로그인</button>
+         </form>`
+      : `<p>관리자 기능이 비활성화되어 있습니다.</p><p class="hint">Render 환경변수에 <code>ADMIN_PANEL_KEY</code>를 설정하세요.</p>`}
+    ${safeMessage ? `<div class="msg">${safeMessage}</div>` : ""}
+  </div>
+</body>
+</html>`;
+}
+
+function renderAdminConsoleHtml() {
+  return `<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>관리자 DB 콘솔</title>
+  <style>
+    body{font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#f8fafc;margin:0;color:#0f172a}
+    main{max-width:1280px;margin:20px auto;padding:0 16px 40px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    select,input,button{border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font-size:13px}
+    button{cursor:pointer;background:#fff}
+    button.primary{background:#0f172a;border-color:#0f172a;color:#fff}
+    .muted{color:#64748b;font-size:12px}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th,td{border-bottom:1px solid #e2e8f0;padding:8px;vertical-align:top;text-align:left}
+    th{position:sticky;top:0;background:#f8fafc}
+    .json{max-width:360px;white-space:pre-wrap;word-break:break-word}
+    .actions{display:flex;gap:6px}
+    #tableWrap{overflow:auto;max-height:70vh}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <h1 style="margin:0;">관리자 DB 콘솔</h1>
+      <a href="/admin/logout"><button>로그아웃</button></a>
+    </div>
+    <div class="card" style="margin-bottom:10px;">
+      <div class="row">
+        <label>테이블</label>
+        <select id="tableSelect"></select>
+        <label>limit</label>
+        <input id="limitInput" type="number" min="1" max="500" value="100" style="width:90px;" />
+        <button id="reloadBtn" class="primary">조회</button>
+        <span id="metaText" class="muted"></span>
+      </div>
+    </div>
+    <div class="card">
+      <div id="tableWrap"><table id="dataTable"></table></div>
+    </div>
+  </main>
+  <script>
+    (function () {
+      const tableSelect = document.getElementById("tableSelect");
+      const limitInput = document.getElementById("limitInput");
+      const reloadBtn = document.getElementById("reloadBtn");
+      const dataTable = document.getElementById("dataTable");
+      const metaText = document.getElementById("metaText");
+
+      let tableMeta = [];
+      let currentRows = [];
+      let currentTable = "";
+      let currentPk = "";
+
+      function textCell(value) {
+        const v = value === null || value === undefined ? "" : String(value);
+        if (v.length > 180) return v.slice(0, 180) + " ...";
+        return v;
+      }
+
+      async function fetchJson(url, options) {
+        const res = await fetch(url, options);
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || json.ok === false) {
+          throw new Error(json.message || ("요청 실패 (" + res.status + ")"));
+        }
+        return json;
+      }
+
+      async function loadTables() {
+        const json = await fetchJson("/api/admin/tables");
+        tableMeta = Array.isArray(json.tables) ? json.tables : [];
+        tableSelect.innerHTML = "";
+        tableMeta.forEach((t) => {
+          const opt = document.createElement("option");
+          opt.value = t.table;
+          opt.textContent = t.table + " (" + (t.rowCount || 0) + ")";
+          tableSelect.appendChild(opt);
+        });
+        if (tableMeta.length > 0) {
+          currentTable = tableMeta[0].table;
+          currentPk = tableMeta[0].primaryKey || "";
+        }
+      }
+
+      function renderRows(rows, columns) {
+        dataTable.innerHTML = "";
+        const thead = document.createElement("thead");
+        const hr = document.createElement("tr");
+        columns.forEach((col) => {
+          const th = document.createElement("th");
+          th.textContent = col;
+          hr.appendChild(th);
+        });
+        const actionTh = document.createElement("th");
+        actionTh.textContent = "actions";
+        hr.appendChild(actionTh);
+        thead.appendChild(hr);
+        dataTable.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        rows.forEach((row, idx) => {
+          const tr = document.createElement("tr");
+          columns.forEach((col) => {
+            const td = document.createElement("td");
+            const value = row[col];
+            if (typeof value === "object" && value !== null) {
+              td.className = "json";
+              td.textContent = textCell(JSON.stringify(value));
+            } else {
+              td.textContent = textCell(value);
+            }
+            tr.appendChild(td);
+          });
+          const actionTd = document.createElement("td");
+          const box = document.createElement("div");
+          box.className = "actions";
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "수정";
+          editBtn.onclick = () => editRow(idx);
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "삭제";
+          delBtn.onclick = () => deleteRow(idx);
+          box.appendChild(editBtn);
+          box.appendChild(delBtn);
+          actionTd.appendChild(box);
+          tr.appendChild(actionTd);
+          tbody.appendChild(tr);
+        });
+        dataTable.appendChild(tbody);
+      }
+
+      async function loadRows() {
+        currentTable = tableSelect.value;
+        const limit = Math.max(1, Math.min(500, Number(limitInput.value || 100)));
+        const json = await fetchJson("/api/admin/rows?table=" + encodeURIComponent(currentTable) + "&limit=" + limit);
+        currentRows = Array.isArray(json.rows) ? json.rows : [];
+        currentPk = json.primaryKey || "";
+        const columns = Array.isArray(json.columns) ? json.columns.map((c) => c.name) : [];
+        renderRows(currentRows, columns);
+        metaText.textContent = "total " + (json.total || 0) + " / pk: " + (currentPk || "-");
+      }
+
+      async function editRow(index) {
+        if (!currentPk) return alert("기본키가 없는 테이블은 수정할 수 없습니다.");
+        const row = currentRows[index];
+        const raw = prompt("행 JSON 수정", JSON.stringify(row, null, 2));
+        if (raw === null) return;
+        let next;
+        try { next = JSON.parse(raw); } catch { return alert("JSON 파싱 실패"); }
+        await fetchJson("/api/admin/replace-row", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            table: currentTable,
+            pkColumn: currentPk,
+            pkValue: row[currentPk],
+            row: next,
+          }),
+        });
+        await loadRows();
+      }
+
+      async function deleteRow(index) {
+        if (!currentPk) return alert("기본키가 없는 테이블은 삭제할 수 없습니다.");
+        const row = currentRows[index];
+        if (!confirm("정말 삭제할까요?")) return;
+        await fetchJson("/api/admin/delete-row", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            table: currentTable,
+            pkColumn: currentPk,
+            pkValue: row[currentPk],
+          }),
+        });
+        await loadRows();
+      }
+
+      reloadBtn.addEventListener("click", loadRows);
+      tableSelect.addEventListener("change", loadRows);
+
+      (async () => {
+        try {
+          await loadTables();
+          await loadRows();
+        } catch (error) {
+          alert(error.message || "관리자 데이터 로드 실패");
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>`;
 }
 
 function getPublicOrigin(req) {
@@ -1148,6 +1458,24 @@ const requestHandler = async (req, res) => {
       }
     }
 
+    if (req.method === "GET" && pathname === "/admin") {
+      if (!isAdminPanelEnabled()) {
+        return sendHtml(res, 200, renderAdminLoginHtml({ enabled: false }));
+      }
+      if (!hasAdminSession(req)) {
+        const message = requestUrl.searchParams.get("message") || "";
+        return sendHtml(res, 200, renderAdminLoginHtml({ enabled: true, message }));
+      }
+      return sendHtml(res, 200, renderAdminConsoleHtml());
+    }
+
+    if (req.method === "GET" && pathname === "/admin/logout") {
+      const token = readAdminSessionToken(req);
+      if (token) adminSessions.delete(token);
+      clearAdminCookie(res, req);
+      return redirect(res, "/admin");
+    }
+
     if (req.method === "GET" && pathname === "/") {
       const userId = auth?.loggedIn ? auth.user.email : requestUrl.searchParams.get("userId") || "demo-user";
       return sendHtml(
@@ -1333,6 +1661,22 @@ const requestHandler = async (req, res) => {
       });
     }
 
+    if (req.method === "GET" && pathname === "/api/admin/tables") {
+      if (!(await requireAdminApi(res, req))) return;
+      const tables = await adminListTables();
+      return sendJson(res, 200, { ok: true, tables });
+    }
+
+    if (req.method === "GET" && pathname === "/api/admin/rows") {
+      if (!(await requireAdminApi(res, req))) return;
+      const table = String(requestUrl.searchParams.get("table") || "").trim();
+      if (!table) return badRequest(res, "table is required");
+      const limit = toInt(requestUrl.searchParams.get("limit"), 100);
+      const offset = toInt(requestUrl.searchParams.get("offset"), 0);
+      const result = await adminGetTableRows(table, { limit, offset });
+      return sendJson(res, 200, { ok: true, ...result });
+    }
+
     if (req.method === "GET" && pathname === "/api/results") {
       if (!(await requireLoggedIn(res, auth))) return;
       const records = await listGenerationRecords(auth.user.email, { limit: 200 });
@@ -1476,6 +1820,25 @@ const requestHandler = async (req, res) => {
       }
     }
 
+    if (req.method === "POST" && pathname === "/admin/login") {
+      if (!isAdminPanelEnabled()) {
+        return sendHtml(res, 503, renderAdminLoginHtml({
+          enabled: false,
+          message: "ADMIN_PANEL_KEY 환경변수를 먼저 설정하세요.",
+        }));
+      }
+      const raw = await readBody(req);
+      const body = parseFormUrlEncoded(raw);
+      const submitted = String(body?.adminKey || "").trim();
+      const expected = getAdminPanelKey();
+      if (!submitted || submitted !== expected) {
+        return redirect(res, "/admin?message=" + encodeURIComponent("관리자 키가 올바르지 않습니다."));
+      }
+      const token = createAdminSession();
+      setAdminCookie(res, token, req);
+      return redirect(res, "/admin");
+    }
+
     if (req.method === "POST" && pathname.startsWith("/api/")) {
       if (pathname === "/api/image-analyze") {
         if (!(await requireLoggedIn(res, auth))) return;
@@ -1550,6 +1913,27 @@ const requestHandler = async (req, res) => {
       const raw = await readBody(req);
       const jsonBody = parseMaybeJson(raw);
       const body = jsonBody || parseFormUrlEncoded(raw);
+
+      if (pathname === "/api/admin/replace-row") {
+        if (!(await requireAdminApi(res, req))) return;
+        const table = String(body?.table || "").trim();
+        const pkColumn = String(body?.pkColumn || "").trim();
+        const pkValue = body?.pkValue;
+        const row = body?.row && typeof body.row === "object" && !Array.isArray(body.row) ? body.row : {};
+        if (!table || !pkColumn) return badRequest(res, "table and pkColumn are required");
+        const result = await adminReplaceTableRow(table, { pkColumn, pkValue, row });
+        return sendJson(res, 200, result);
+      }
+
+      if (pathname === "/api/admin/delete-row") {
+        if (!(await requireAdminApi(res, req))) return;
+        const table = String(body?.table || "").trim();
+        const pkColumn = String(body?.pkColumn || "").trim();
+        const pkValue = body?.pkValue;
+        if (!table || !pkColumn) return badRequest(res, "table and pkColumn are required");
+        const result = await adminDeleteTableRow(table, { pkColumn, pkValue });
+        return sendJson(res, 200, result);
+      }
 
       if (pathname === "/api/persona") {
         if (!(await requireLoggedIn(res, auth))) return;

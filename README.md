@@ -75,6 +75,7 @@ CLOUDFLARE_MODEL=@cf/meta/llama-3.1-8b-instruct
 - `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_MODEL`
 - `CLOUDFLARE_VISION_MODEL`
 - `THREADS_APP_ID`, `THREADS_APP_SECRET`, `THREADS_REDIRECT_URI`, `THREADS_SCOPE`
+- `ADMIN_PANEL_KEY` (관리자 DB 콘솔 `/admin` 접근 키)
 - `SSL_KEY_PATH`, `SSL_CERT_PATH`
 - `DB_PATH`, `UPLOAD_DIR`, `PORT`, `HOST`
 
@@ -99,6 +100,13 @@ CLOUDFLARE_MODEL=@cf/meta/llama-3.1-8b-instruct
 - `HOST=0.0.0.0`
 
 즉, SQLite와 업로드가 모두 디스크(`/var/data`)에 영속 저장됩니다.
+
+## 관리자 DB 콘솔
+
+- 경로: `/admin`
+- 접근: `ADMIN_PANEL_KEY` 환경변수 설정 후 관리자 키 로그인
+- 권한: 로그인한 관리자는 사용자 이메일 일치 여부와 무관하게 전체 테이블 조회/수정/삭제 가능
+- 주의: 운영 환경에서는 반드시 강한 키를 사용하고 외부에 노출하지 마세요.
 
 ## API
 

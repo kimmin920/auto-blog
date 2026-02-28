@@ -5,6 +5,20 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 let dbPromise = null;
+const ADMIN_ALLOWED_TABLES = [
+  "users",
+  "sessions",
+  "style_profiles",
+  "blog_sources",
+  "instagram_batches",
+  "threads_batches",
+  "threads_auth",
+  "drafts",
+  "image_analyses",
+  "personas",
+  "generation_history",
+  "token_ledger",
+];
 
 function getDbPath() {
   return process.env.DB_PATH || "./data/blog-auto.sqlite";
@@ -118,6 +132,26 @@ async function getDb() {
   `);
 
   return db;
+}
+
+function normalizeIdentifier(value) {
+  const text = String(value || "").trim();
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(text)) return "";
+  return text;
+}
+
+function quoteIdentifier(value) {
+  const normalized = normalizeIdentifier(value);
+  if (!normalized) throw new Error("invalid identifier");
+  return `"${normalized}"`;
+}
+
+function assertAdminTable(table) {
+  const normalized = normalizeIdentifier(table);
+  if (!normalized || !ADMIN_ALLOWED_TABLES.includes(normalized)) {
+    throw new Error("table is not allowed");
+  }
+  return normalized;
 }
 
 function nowIso() {
@@ -537,4 +571,103 @@ export async function getImageAnalysis(userId) {
   const row = await db.get("SELECT analysis_json FROM image_analyses WHERE user_id = ?", userId);
   if (!row) return null;
   return parseJsonSafe(row.analysis_json, null);
+}
+
+async function getTableMeta(table) {
+  const db = await getDb();
+  const safeTable = assertAdminTable(table);
+  const tableSql = quoteIdentifier(safeTable);
+  const columns = await db.all(`PRAGMA table_info(${tableSql})`);
+  const normalizedColumns = columns.map((col) => ({
+    name: String(col?.name || ""),
+    type: String(col?.type || ""),
+    notNull: Number(col?.notnull || 0) === 1,
+    primaryKey: Number(col?.pk || 0) > 0,
+  }));
+  const primary = normalizedColumns.find((col) => col.primaryKey)?.name || "";
+  return {
+    table: safeTable,
+    tableSql,
+    columns: normalizedColumns,
+    primaryKey: primary,
+  };
+}
+
+export async function adminListTables() {
+  const db = await getDb();
+  const output = [];
+  for (const table of ADMIN_ALLOWED_TABLES) {
+    const meta = await getTableMeta(table);
+    const row = await db.get(`SELECT COUNT(*) AS c FROM ${meta.tableSql}`);
+    output.push({
+      table: meta.table,
+      rowCount: Number(row?.c || 0),
+      primaryKey: meta.primaryKey,
+      columns: meta.columns,
+    });
+  }
+  return output;
+}
+
+export async function adminGetTableRows(table, { limit = 100, offset = 0 } = {}) {
+  const db = await getDb();
+  const meta = await getTableMeta(table);
+  const safeLimit = Math.min(500, Math.max(1, Number(limit || 100)));
+  const safeOffset = Math.max(0, Number(offset || 0));
+  const orderBySql = meta.primaryKey ? `${quoteIdentifier(meta.primaryKey)} DESC` : "rowid DESC";
+  const rows = await db.all(
+    `SELECT * FROM ${meta.tableSql} ORDER BY ${orderBySql} LIMIT ? OFFSET ?`,
+    safeLimit,
+    safeOffset
+  );
+  const totalRow = await db.get(`SELECT COUNT(*) AS c FROM ${meta.tableSql}`);
+  return {
+    table: meta.table,
+    primaryKey: meta.primaryKey,
+    columns: meta.columns,
+    total: Number(totalRow?.c || 0),
+    rows,
+  };
+}
+
+export async function adminReplaceTableRow(table, { pkColumn, pkValue, row }) {
+  const db = await getDb();
+  const meta = await getTableMeta(table);
+  if (!meta.primaryKey) throw new Error("primary key not found");
+
+  const normalizedPkColumn = normalizeIdentifier(pkColumn);
+  if (!normalizedPkColumn || normalizedPkColumn !== meta.primaryKey) {
+    throw new Error("invalid primary key column");
+  }
+
+  const payload = row && typeof row === "object" && !Array.isArray(row) ? row : {};
+  const allowedColumns = new Set(meta.columns.map((col) => col.name));
+  const updateColumns = Object.keys(payload).filter((name) => name !== meta.primaryKey && allowedColumns.has(name));
+  if (!updateColumns.length) {
+    return { ok: true, changes: 0 };
+  }
+
+  const setSql = updateColumns.map((name) => `${quoteIdentifier(name)} = ?`).join(", ");
+  const values = updateColumns.map((name) => payload[name]);
+  const result = await db.run(
+    `UPDATE ${meta.tableSql} SET ${setSql} WHERE ${quoteIdentifier(meta.primaryKey)} = ?`,
+    ...values,
+    pkValue
+  );
+  return { ok: true, changes: Number(result?.changes || 0) };
+}
+
+export async function adminDeleteTableRow(table, { pkColumn, pkValue }) {
+  const db = await getDb();
+  const meta = await getTableMeta(table);
+  if (!meta.primaryKey) throw new Error("primary key not found");
+  const normalizedPkColumn = normalizeIdentifier(pkColumn);
+  if (!normalizedPkColumn || normalizedPkColumn !== meta.primaryKey) {
+    throw new Error("invalid primary key column");
+  }
+  const result = await db.run(
+    `DELETE FROM ${meta.tableSql} WHERE ${quoteIdentifier(meta.primaryKey)} = ?`,
+    pkValue
+  );
+  return { ok: true, changes: Number(result?.changes || 0) };
 }
